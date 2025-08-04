@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'records',  # naya zehan app
+    'rest_framework',  # Django REST Framework for API support
 ]
 
 MIDDLEWARE = [
@@ -85,12 +86,13 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'khidmat_db',
-        'USER': 'roshaan_khimat',  # not khidmat here but khimar , missed the d
+        'USER': 'roshaan_khimat',  # not khidmat here but khimat , missed the d
         'PASSWORD': 'securepass',
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
+#super user is roshaankhan with password securepasss
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
