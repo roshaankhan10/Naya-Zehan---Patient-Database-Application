@@ -92,7 +92,13 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-#super user is roshaankhan with password securepasss
+#super user is roshaankhan with password securepass
+
+
+# curl -X POST http://127.0.0.1:8000/api/token/ \
+#   -H "Content-Type: application/json" \
+#   -d '{"username": "roshaankhan", "password": "securepass"}'
+# {"refresh":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc1NDU5MDM1NCwiaWF0IjoxNzU0NTAzOTU0LCJqdGkiOiJjZWEzM2ZjMjlhMmY0YWQxOTBmZTYxYjhlN2QyOGY4ZCIsInVzZXJfaWQiOiIxIn0.JtuB42jOlo9u4t5qFgAOCgksnvemsJJq3WXxyDMlIdo","access":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU0NTA0MjU0LCJpYXQiOjE3NTQ1MDM5NTQsImp0aSI6Ijg1MzhiZDU4NzFlZjQ1MmY5ZGE4MTcwNzZlN2E5MGEyIiwidXNlcl9pZCI6IjEifQ.ChTAJke5c1iofrpv6GFohkDJAmyaqs7oMtsQVBWyZlo"}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -112,6 +118,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/

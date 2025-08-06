@@ -25,6 +25,10 @@ from django.urls import path, include
 from rest_framework import routers
 from records.views import PatientViewSet, AdmissionViewSet
 
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+
+
 router = routers.DefaultRouter()
 router.register(r'patients', PatientViewSet)
 router.register(r'admissions', AdmissionViewSet)
@@ -32,5 +36,11 @@ router.register(r'admissions', AdmissionViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+]
+# Adding JWT authentication URLs
+# This allows for token-based authentication in the API.
+urlpatterns += [
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
 # This file defines the URL routing for the backend application, including the admin interface and API endpoints for patients and admissions.
