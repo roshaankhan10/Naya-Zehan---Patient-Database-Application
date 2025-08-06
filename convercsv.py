@@ -2,8 +2,8 @@
 from dbfread import DBF
 import csv
 
-dbf_file = DBF("INDOOR1.DBF")
-with open("INDOOR1.csv", "w", newline='', encoding="utf-8") as f:
+dbf_file = DBF("PATREC - Copy.DBF")
+with open("PATREC-Copy.csv", "w", newline='', encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=dbf_file.field_names)
     writer.writeheader()
     for record in dbf_file:
