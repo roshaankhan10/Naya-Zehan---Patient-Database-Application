@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-x+8bosm@t%go&f&^gd$q1+b5#c1)kar(f##v)5-r2xm_26fj76
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '172.23.55.143']
+ 
 
 
 # Application definition
@@ -39,7 +40,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'records',  # naya zehan app
     'rest_framework',  # Django REST Framework for API support
+    'corsheaders',  # CORS headers for cross-origin requests
+    'rest_framework_simplejwt',  # JWT authentication
 ]
+
+# INSTALLED_APPS += ["corsheaders"]
+
+
+CORS_ALLOW_ALL_ORIGINS = True  # or restrict per origin
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -49,7 +57,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # CORS middleware
 ]
+
+# MIDDLEWARE = [
+#     "corsheaders.middleware.CorsMiddleware",
+#     *MIDDLEWARE,  # keep existing ones
+# ]
+
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -93,6 +108,8 @@ DATABASES = {
     }
 }
 #super user is roshaankhan with password securepass
+
+#securepassflutter for keyring
 
 
 # curl -X POST http://127.0.0.1:8000/api/token/ \
