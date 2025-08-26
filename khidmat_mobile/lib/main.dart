@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
 import 'screens/patient_list_screen.dart';
+import 'screens/add_patient_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,6 +19,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginScreen(),
         '/patients': (context) => const PatientListScreen(),
+        '/add_patient': (context) => const AddPatientScreen(),
       },
     );
   }
