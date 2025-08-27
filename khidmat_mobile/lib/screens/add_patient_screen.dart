@@ -1,6 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AddPatientScreen extends StatefulWidget {
@@ -12,14 +12,26 @@ class AddPatientScreen extends StatefulWidget {
 
 class _AddPatientScreenState extends State<AddPatientScreen> {
   final _formKey = GlobalKey<FormState>();
+
   final _hospitalIdController = TextEditingController();
   final _nameController = TextEditingController();
   final _fatherNameController = TextEditingController();
+  final _surnameController = TextEditingController();
+  final _nicController = TextEditingController();
+  final _dobController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _religionController = TextEditingController();
+  final _educationController = TextEditingController();
+  final _occupationController = TextEditingController();
+  final _addressController = TextEditingController();
+
+  String? _sex;
+  String? _maritalStatus;
 
   bool _loading = false;
   String _error = '';
 
-  Future<void> _addPatient() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -27,85 +39,139 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
       _error = '';
     });
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('access_token');
-      if (token == null) throw Exception("No access token found");
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
 
-      final url = Uri.parse('http://127.0.0.1:8000/api/patients/');
-      final response = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'hospital_id': _hospitalIdController.text.trim(),
-          'name': _nameController.text.trim(),
-          'father_name': _fatherNameController.text.trim(),
-        }),
-      );
+    final url = Uri.parse("http://127.0.0.1:8000/api/patients/");
 
-      if (response.statusCode == 201) {
-        if (mounted) Navigator.pop(context, true);
-      } else {
-        setState(() {
-          _error = 'Failed to add patient: ${response.body}';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _error = 'Error: $e';
-      });
+    final body = {
+      "hospital_id": _hospitalIdController.text,
+      "name": _nameController.text,
+      "father_name": _fatherNameController.text,
+      "surname": _surnameController.text,
+      "nic": _nicController.text,
+      "dob": _dobController.text,
+      "age": int.tryParse(_ageController.text),
+      "sex": _sex,
+      "marital_status": _maritalStatus,
+      "religion": _religionController.text,
+      "education": _educationController.text,
+      "occupation": _occupationController.text,
+      "address": _addressController.text,
+    };
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+
+    setState(() => _loading = false);
+
+    if (response.statusCode == 201) {
+      Navigator.pop(context, true); // success
+    } else {
+      setState(() => _error = "Failed: ${response.body}");
     }
-
-    setState(() {
-      _loading = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Patient')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _hospitalIdController,
-                decoration: const InputDecoration(labelText: 'Hospital ID'),
-                validator: (value) => value!.isEmpty ? 'Required' : null,
-              ),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                validator: (value) => value!.isEmpty ? 'Required' : null,
-              ),
-              TextFormField(
-                controller: _fatherNameController,
-                decoration: const InputDecoration(labelText: 'Father Name'),
-              ),
-              const SizedBox(height: 20),
-              if (_loading)
-                const CircularProgressIndicator()
-              else
-                ElevatedButton(
-                  onPressed: _addPatient,
-                  child: const Text('Save'),
+      appBar: AppBar(title: const Text("Add Patient")),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _hospitalIdController,
+                      decoration: const InputDecoration(labelText: "Hospital ID"),
+                      validator: (v) => v!.isEmpty ? "Required" : null,
+                    ),
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(labelText: "Name"),
+                      validator: (v) => v!.isEmpty ? "Required" : null,
+                    ),
+                    TextFormField(
+                      controller: _fatherNameController,
+                      decoration: const InputDecoration(labelText: "Father's Name"),
+                    ),
+                    TextFormField(
+                      controller: _surnameController,
+                      decoration: const InputDecoration(labelText: "Surname"),
+                    ),
+                    TextFormField(
+                      controller: _nicController,
+                      decoration: const InputDecoration(labelText: "NIC"),
+                    ),
+                    TextFormField(
+                      controller: _dobController,
+                      decoration: const InputDecoration(labelText: "DOB (YYYY-MM-DD)"),
+                    ),
+                    TextFormField(
+                      controller: _ageController,
+                      decoration: const InputDecoration(labelText: "Age"),
+                      keyboardType: TextInputType.number,
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: _sex,
+                      items: const [
+                        DropdownMenuItem(value: "Male", child: Text("Male")),
+                        DropdownMenuItem(value: "Female", child: Text("Female")),
+                      ],
+                      onChanged: (val) => setState(() => _sex = val),
+                      decoration: const InputDecoration(labelText: "Sex"),
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: _maritalStatus,
+                      items: const [
+                        DropdownMenuItem(value: "Single", child: Text("Single")),
+                        DropdownMenuItem(value: "Married", child: Text("Married")),
+                      ],
+                      onChanged: (val) => setState(() => _maritalStatus = val),
+                      decoration: const InputDecoration(labelText: "Marital Status"),
+                    ),
+                    TextFormField(
+                      controller: _religionController,
+                      decoration: const InputDecoration(labelText: "Religion"),
+                    ),
+                    TextFormField(
+                      controller: _educationController,
+                      decoration: const InputDecoration(labelText: "Education"),
+                    ),
+                    TextFormField(
+                      controller: _occupationController,
+                      decoration: const InputDecoration(labelText: "Occupation"),
+                    ),
+                    TextFormField(
+                      controller: _addressController,
+                      decoration: const InputDecoration(labelText: "Address"),
+                      maxLines: 2,
+                    ),
+
+                    if (_error.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(_error, style: const TextStyle(color: Colors.red)),
+                      ),
+
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _submit,
+                      child: const Text("Save Patient"),
+                    ),
+                  ],
                 ),
-              if (_error.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text(_error, style: const TextStyle(color: Colors.red)),
-                ),
-            ],
-          ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 }
-    
