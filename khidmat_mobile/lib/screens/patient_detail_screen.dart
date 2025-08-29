@@ -99,20 +99,35 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () async {
-              final updated = await Navigator.push(
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => EditPatientScreen(patient: patient!),
+                  builder: (_) => EditPatientScreen(patient: patient!),
                 ),
               );
-              if (updated == true) {
-                _refreshPatient();
+              if (result == true) {
+                await _refreshPatient();
               }
             },
           ),
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: _deletePatient,
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("Delete Patient"),
+                  content: const Text("Are you sure you want to delete this patient?"),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text("Cancel")),
+                    TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text("Delete")),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await _deletePatient();
+              }
+            },
           ),
         ],
       ),
@@ -141,9 +156,54 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             _buildCard("Address", [
               _buildDetailRow("Address", patient!['address']),
             ]),
+            _buildAdmissionsSection(),
           ],
         ),
       ),
     );
   }
+  Widget _buildAdmissionsSection() {
+    final admissions = patient!['admissions'] ?? []; // <-- add ! here
+
+    if (admissions.isEmpty) {
+      return _buildCard("Admissions", [
+        const Text("No admissions found."),
+        ElevatedButton.icon(
+          onPressed: () {
+            Navigator.pushNamed(
+              context,
+              '/add_admission',
+              arguments: patient!['hospital_id'], // <-- add ! here
+            );
+          },
+          icon: const Icon(Icons.add),
+          label: const Text("Add Admission"),
+        )
+      ]);
+    }
+
+    return _buildCard("Admissions", [
+      ...admissions.map<Widget>((adm) {
+        return ListTile(
+          title: Text("Date: ${adm['date_of_admission']}"),
+          subtitle: Text("Ward: ${adm['ward_no']} | Ref: ${adm['ref_source'] ?? 'N/A'}"),
+          trailing: adm['is_current'] == true
+              ? const Icon(Icons.check_circle, color: Colors.green)
+              : null,
+        );
+      }).toList(),
+      ElevatedButton.icon(
+        onPressed: () {
+          Navigator.pushNamed(
+            context,
+            '/add_admission',
+            arguments: patient!['hospital_id'], // <-- add ! here
+          );
+        },
+        icon: const Icon(Icons.add),
+        label: const Text("Add Admission"),
+      )
+    ]);
+  }
+
 }

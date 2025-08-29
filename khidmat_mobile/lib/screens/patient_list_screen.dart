@@ -103,6 +103,12 @@ class _PatientListScreenState extends State<PatientListScreen> {
             },
           ),
           IconButton(
+            icon: const Icon(Icons.people),
+            onPressed: () {
+              Navigator.pushNamed(context, '/admissions');
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _logout,
           ),
