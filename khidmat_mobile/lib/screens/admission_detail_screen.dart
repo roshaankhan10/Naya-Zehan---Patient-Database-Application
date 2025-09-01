@@ -32,10 +32,13 @@ class AdmissionDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Admission Detail"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _deleteAdmission(context),
-          )
+          Tooltip(
+            message: 'Delete admission',
+            child: IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _deleteAdmission(context),
+            ),
+          ),
         ],
       ),
       body: Padding(

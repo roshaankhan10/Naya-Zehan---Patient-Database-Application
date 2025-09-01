@@ -59,10 +59,10 @@ class _AddAdmissionScreenState extends State<AddAdmissionScreen> {
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                controller: _refController,
-                decoration: const InputDecoration(labelText: "Patient Name"),
-              ),
+              // TextFormField(
+              //   controller: _refController,
+              //   decoration: const InputDecoration(labelText: "Patient Name"),
+              // ),
               TextFormField(
                 controller: _wardController,
                 decoration: const InputDecoration(labelText: "Ward No"),

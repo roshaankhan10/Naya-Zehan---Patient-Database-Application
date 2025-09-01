@@ -50,17 +50,20 @@ class _AdmissionsListScreenState extends State<AdmissionsListScreen> {
       appBar: AppBar(
         title: const Text("Current Admissions"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () async {
-              final added = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AddAdmissionScreen(hospitalId: "")), // We’ll adjust this
-              );
-              if (added == true) _fetchAdmissions();
-            },
-          )
-        ],
+          Tooltip(
+            message: 'add new admission',
+            child:IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () async {
+                final added = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddAdmissionScreen(hospitalId: "")), // We’ll adjust this
+                );
+                if (added == true) _fetchAdmissions();
+              },
+            ),
+          ),
+          ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

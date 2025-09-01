@@ -96,12 +96,14 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
       appBar: AppBar(
         title: Text("Patient: ${patient!['name']}"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
+          Tooltip(
+            message: "edit patient details",
+            child: IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
                   builder: (_) => EditPatientScreen(patient: patient!),
                 ),
               );
@@ -109,8 +111,11 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
                 await _refreshPatient();
               }
             },
+          )
           ),
-          IconButton(
+          Tooltip(
+          message: "delete patient",
+          child: IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () async {
               final confirm = await showDialog<bool>(
@@ -129,6 +134,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
               }
             },
           ),
+          )
         ],
       ),
       body: SingleChildScrollView(
