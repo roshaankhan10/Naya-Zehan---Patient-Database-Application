@@ -92,25 +92,34 @@ class _PatientListScreenState extends State<PatientListScreen> {
       appBar: AppBar(
         title: const Text('Patients'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () async {
-              final added = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AddPatientScreen()),
+          Tooltip(
+            message: 'Add patient',
+            child: IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () async {
+                final added = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddPatientScreen()),
               );
               if (added == true) _fetchPatients();
             },
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.people),
-            onPressed: () {
-              Navigator.pushNamed(context, '/admissions');
-            },
+          Tooltip(
+            message: 'View admissions',
+            child: IconButton(
+              icon: const Icon(Icons.people),
+              onPressed: () {
+                Navigator.pushNamed(context, '/admissions');
+              },
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
+          Tooltip(
+            message: 'Logout',
+            child: IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: _logout,
+            ),
           ),
         ],
       ),
