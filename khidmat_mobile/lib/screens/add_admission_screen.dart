@@ -40,13 +40,14 @@ class _AddAdmissionScreenState extends State<AddAdmissionScreen> {
       }),
     );
 
+    
     if (response.statusCode == 201) {
-      Navigator.pop(context, true);
-    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed: ${response.body}")),
+        const SnackBar(content: Text("✅ Patient admitted successfully")),
       );
+      Navigator.pop(context, true);
     }
+
   }
 
   @override

@@ -72,10 +72,16 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
     setState(() => _loading = false);
 
     if (response.statusCode == 201) {
-      Navigator.pop(context, true); // success
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("✅ New patient added successfully")),
+      );
+      Navigator.pop(context, true);
     } else {
-      setState(() => _error = "Failed: ${response.body}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed: ${response.body}")),
+      );
     }
+
   }
 
   @override
