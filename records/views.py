@@ -13,3 +13,8 @@ class PatientViewSet(viewsets.ModelViewSet):
 class AdmissionViewSet(viewsets.ModelViewSet):
     queryset = Admission.objects.all()
     serializer_class = AdmissionSerializer
+
+from django.http import HttpResponse
+
+def home(request):
+    return HttpResponse("Records API working")
