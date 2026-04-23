@@ -1,10 +1,9 @@
-// lib/screens/admissions_list_screen.dart
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'add_admission_screen.dart';
+import '../config/app_theme.dart';
+import '../models/admission.dart';
+import '../services/api_service.dart';
 import 'admission_detail_screen.dart';
+import 'add_admission_screen.dart';
 
 class AdmissionsListScreen extends StatefulWidget {
   const AdmissionsListScreen({super.key});
@@ -15,116 +14,200 @@ class AdmissionsListScreen extends StatefulWidget {
 
 class _AdmissionsListScreenState extends State<AdmissionsListScreen> {
   bool _loading = true;
-  String _error = '';
-  List<dynamic> _admissions = [];
-  List<dynamic> _filteredAdmissions = [];
-  final _searchController = TextEditingController();
+  String? _error;
+  List<Admission> _admissions = [];
+  List<Admission> _filtered = [];
+  final _searchCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchAdmissions();
-    _searchController.addListener(_applySearch);
+    _searchCtrl.addListener(_applyFilter);
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchAdmissions() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("access_token");
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
-    final response = await http.get(
-      Uri.parse("http://127.0.0.1:8000/api/admissions/"),
-      headers: {"Authorization": "Bearer $token"},
-    );
-
-    if (response.statusCode == 200) {
+    try {
+      final result = await ApiService.getAdmissions();
       setState(() {
-        _admissions = jsonDecode(response.body);
-        _filteredAdmissions = _admissions;
+        _admissions = result.results;
+        _filtered = result.results;
         _loading = false;
       });
-    } else {
+    } catch (e) {
       setState(() {
-        _error = "Failed: ${response.statusCode}";
+        _error = e.toString();
         _loading = false;
       });
     }
   }
 
-  void _applySearch() {
-    final query = _searchController.text.toLowerCase();
+  void _applyFilter() {
+    final q = _searchCtrl.text.toLowerCase();
     setState(() {
-      _filteredAdmissions = _admissions.where((adm) {
-        final ward = (adm['ward_no'] ?? '').toString().toLowerCase();
-        final ref = (adm['ref_source'] ?? '').toString().toLowerCase();
-        return ward.contains(query) || ref.contains(query);
+      _filtered = _admissions.where((a) {
+        return a.wardNo.toLowerCase().contains(q) ||
+            (a.refSource?.toLowerCase().contains(q) ?? false) ||
+            (a.patientName?.toLowerCase().contains(q) ?? false) ||
+            a.patientHospitalId.toLowerCase().contains(q);
       }).toList();
     });
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text("Admissions"),
-      actions: [
-        Tooltip(
-          message: 'Add admission',
-          child: IconButton( 
-            icon: const Icon(Icons.add),
-            onPressed: () async {
-              final added = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AddAdmissionScreen(hospitalId: "")),
-              );
-              if (added == true) _fetchAdmissions();
-            },
-          ),
-        ),
-      ],
-    ),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Admissions'),
+      ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error.isNotEmpty
-              ? Center(child: Text(_error, style: const TextStyle(color: Colors.red)))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary))
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_error!, style: const TextStyle(color: AppColors.error)),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                          onPressed: _fetchAdmissions,
+                          child: const Text('Retry')),
+                    ],
+                  ),
+                )
               : Column(
                   children: [
+                    // Search
                     Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(12),
                       child: TextField(
-                        controller: _searchController,
+                        controller: _searchCtrl,
                         decoration: const InputDecoration(
-                          labelText: "Search by ward or reference source",
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(),
+                          hintText: 'Filter by ward, patient, or reference...',
+                          prefixIcon:
+                              Icon(Icons.search, color: AppColors.textTertiary),
                         ),
                       ),
                     ),
+
+                    // Results count
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Records',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primarySurface,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${_filtered.length}',
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // List
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: _filteredAdmissions.length,
-                        itemBuilder: (context, index) {
-                          final adm = _filteredAdmissions[index];
-                          return ListTile(
-                            title: Text("Ward ${adm['ward_no']}"),
-                            subtitle: Text("Ref: ${adm['ref_source'] ?? '-'}"),
-                            trailing: adm['is_current'] == true
-                                ? const Icon(Icons.check_circle, color: Colors.green)
-                                : null,
-                            onTap: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AdmissionDetailScreen(admission: adm),
+                      child: RefreshIndicator(
+                        onRefresh: _fetchAdmissions,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          itemCount: _filtered.length,
+                          itemBuilder: (context, index) {
+                            final adm = _filtered[index];
+                            return Card(
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                leading: Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    color: adm.isCurrent
+                                        ? AppColors.success.withOpacity(0.1)
+                                        : AppColors.primarySurface,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    adm.isCurrent
+                                        ? Icons.check_circle_outline
+                                        : Icons.medical_services_outlined,
+                                    color: adm.isCurrent
+                                        ? AppColors.success
+                                        : AppColors.primary,
+                                    size: 20,
+                                  ),
                                 ),
-                              );
-                              _fetchAdmissions();
-                            },
-                          );
-                        },
+                                title: Text(
+                                  adm.patientName ?? adm.patientHospitalId,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                subtitle: Text(
+                                  'Ward ${adm.wardNo} • ${adm.formattedDate}',
+                                  style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 13),
+                                ),
+                                trailing: const Icon(Icons.chevron_right,
+                                    color: AppColors.textTertiary),
+                                onTap: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => AdmissionDetailScreen(
+                                          admission: adm),
+                                    ),
+                                  );
+                                  _fetchAdmissions();
+                                },
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ],
                 ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final added = await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const AddAdmissionScreen(hospitalId: '')),
+          );
+          if (added == true) _fetchAdmissions();
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Add Admission'),
+      ),
     );
   }
 }

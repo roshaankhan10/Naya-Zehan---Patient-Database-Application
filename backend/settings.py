@@ -10,7 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,13 +22,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x+8bosm@t%go&f&^gd$q1+b5#c1)kar(f##v)5-r2xm_26fj76'
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-x+8bosm@t%go&f&^gd$q1+b5#c1)kar(f##v)5-r2xm_26fj76'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '172.23.55.143']
- 
+ALLOWED_HOSTS = os.environ.get(
+    'ALLOWED_HOSTS',
+    'localhost,127.0.0.1,172.23.55.143,10.0.2.2'
+).split(',')
 
 
 # Application definition
@@ -38,18 +45,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'records',  # naya zehan app
-    'rest_framework',  # Django REST Framework for API support
-    'corsheaders',  # CORS headers for cross-origin requests
-    'rest_framework_simplejwt',  # JWT authentication
+    'records',                  # naya zehan patient records app
+    'rest_framework',           # Django REST Framework for API support
+    'corsheaders',              # CORS headers for cross-origin requests
+    'rest_framework_simplejwt', # JWT authentication
 ]
 
-# INSTALLED_APPS += ["corsheaders"]
-
-
-CORS_ALLOW_ALL_ORIGINS = True  # or restrict per origin
+# CORS configuration
+# In production, replace with specific origins:
+# CORS_ALLOWED_ORIGINS = ['http://your-flutter-app-domain']
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all in development
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Must be before CommonMiddleware
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -57,14 +65,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # CORS middleware
 ]
-
-# MIDDLEWARE = [
-#     "corsheaders.middleware.CorsMiddleware",
-#     *MIDDLEWARE,  # keep existing ones
-# ]
-
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -90,32 +91,13 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'khidmat_db',
-        'USER': 'roshaan_khimat',  # not khidmat here but khimat , missed the d
-        'PASSWORD': 'securepass',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-#super user is roshaankhan with password securepass
 
-#securepassflutter for keyring
-
-
-# curl -X POST http://127.0.0.1:8000/api/token/ \
-#   -H "Content-Type: application/json" \
-#   -d '{"username": "roshaankhan", "password": "securepass"}'
-# {"refresh":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc1NDU5MDM1NCwiaWF0IjoxNzU0NTAzOTU0LCJqdGkiOiJjZWEzM2ZjMjlhMmY0YWQxOTBmZTYxYjhlN2QyOGY4ZCIsInVzZXJfaWQiOiIxIn0.JtuB42jOlo9u4t5qFgAOCgksnvemsJJq3WXxyDMlIdo","access":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU0NTA0MjU0LCJpYXQiOjE3NTQ1MDM5NTQsImp0aSI6Ijg1MzhiZDU4NzFlZjQ1MmY5ZGE4MTcwNzZlN2E5MGEyIiwidXNlcl9pZCI6IjEifQ.ChTAJke5c1iofrpv6GFohkDJAmyaqs7oMtsQVBWyZlo"}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -135,18 +117,34 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+# Django REST Framework configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,
 }
+
+# JWT token configuration
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': False,
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Karachi'
 
 USE_I18N = True
 

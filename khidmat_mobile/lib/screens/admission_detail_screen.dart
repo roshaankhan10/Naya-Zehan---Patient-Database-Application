@@ -1,41 +1,50 @@
-// admission_detail_screen.dart
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+import '../config/app_theme.dart';
+import '../models/admission.dart';
+import '../services/api_service.dart';
+import '../widgets/info_section.dart';
 import 'patient_detail_screen.dart';
 
 class AdmissionDetailScreen extends StatelessWidget {
-  final Map<String, dynamic> admission;
+  final Admission admission;
 
   const AdmissionDetailScreen({super.key, required this.admission});
 
-  Future<void> _deleteAdmission(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
+  Future<void> _delete(BuildContext context) async {
+    if (admission.id == null) return;
 
-    final response = await http.delete(
-      Uri.parse("http://127.0.0.1:8000/api/admissions/${admission['id']}/"),
-      headers: {"Authorization": "Bearer $token"},
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Delete Admission'),
+        content: const Text(
+            'Are you sure you want to delete this admission record?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
 
-    if (response.statusCode == 204) {
-      Navigator.pop(context, true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Admission deleted successfully")),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to delete admission")),
-      );
-    }
-  }
-
-  String _formatDate(String rawDate) {
-    try {
-      final dt = DateTime.parse(rawDate);
-      return "${dt.day}-${dt.month}-${dt.year}";
-    } catch (_) {
-      return rawDate;
+    if (confirm == true) {
+      final success = await ApiService.deleteAdmission(admission.id!);
+      if (success && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Admission deleted'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        Navigator.pop(context, true);
+      }
     }
   }
 
@@ -43,44 +52,102 @@ class AdmissionDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Admission Detail"),
+        title: const Text('Admission Detail'),
         actions: [
-          Tooltip(
-            message: 'Delete admission',
-            child: IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () => _deleteAdmission(context),
-            ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Delete admission',
+            onPressed: () => _delete(context),
           ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Patient: ${admission['patient_name']}"),
-            Text("Ward No: ${admission['ward_no']}"),
-            Text("Date: ${_formatDate(admission['date_of_admission'])}"),
-            Text("Ref Source: ${admission['ref_source'] ?? '-'}"),
-            Text("Current: ${admission['is_current'] ? "Yes" : "No"}"),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.person),
-              label: const Text("View Full Patient Details"),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PatientDetailScreen(
-                      patient: {
-                        "hospital_id": admission['patient'],
-                        "name": admission['patient_name'],
-                      },
+            // Status badge
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: admission.isCurrent
+                    ? AppColors.success.withOpacity(0.08)
+                    : AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: admission.isCurrent
+                      ? AppColors.success.withOpacity(0.3)
+                      : AppColors.border,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    admission.isCurrent
+                        ? Icons.check_circle
+                        : Icons.history,
+                    color: admission.isCurrent
+                        ? AppColors.success
+                        : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    admission.isCurrent
+                        ? 'Current Admission'
+                        : 'Past Admission',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: admission.isCurrent
+                          ? AppColors.success
+                          : AppColors.textSecondary,
                     ),
                   ),
-                );
-              },
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            InfoSection(
+              title: 'Admission Details',
+              icon: Icons.medical_services_outlined,
+              rows: [
+                InfoRow('Patient', admission.patientName ?? '—'),
+                InfoRow('Patient ID', admission.patientHospitalId),
+                InfoRow('Date', admission.formattedDate),
+                InfoRow('Ward No', admission.wardNo),
+                InfoRow('Ref Source', admission.refSource ?? '—'),
+                InfoRow('Status',
+                    admission.isCurrent ? 'Currently Admitted' : 'Discharged'),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PatientDetailScreen(
+                        hospitalId: admission.patientHospitalId,
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.person_outline),
+                label: const Text('View Full Patient Details'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
             ),
           ],
         ),
