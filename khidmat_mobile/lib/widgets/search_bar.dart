@@ -58,36 +58,33 @@ class PatientSearchBar extends StatelessWidget {
                 final isSelected = field == searchField;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    child: ChoiceChip(
-                      avatar: Icon(
-                        _fieldIcon(field),
-                        size: 16,
+                  child: ChoiceChip(
+                    avatar: Icon(
+                      _fieldIcon(field),
+                      size: 16,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                    ),
+                    label: Text(_fieldLabel(field)),
+                    selected: isSelected,
+                    onSelected: (_) => onFieldChanged(field),
+                    selectedColor: AppColors.primarySurface,
+                    backgroundColor: AppColors.surfaceVariant,
+                    labelStyle: TextStyle(
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontSize: 13,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
                         color: isSelected
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
-                      ),
-                      label: Text(_fieldLabel(field)),
-                      selected: isSelected,
-                      onSelected: (_) => onFieldChanged(field),
-                      selectedColor: AppColors.primarySurface,
-                      backgroundColor: AppColors.surfaceVariant,
-                      labelStyle: TextStyle(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w400,
-                        fontSize: 13,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: isSelected
-                              ? AppColors.primary.withOpacity(0.3)
-                              : AppColors.border,
-                        ),
+                            ? AppColors.primary.withOpacity(0.3)
+                            : AppColors.border,
                       ),
                     ),
                   ),
@@ -98,23 +95,29 @@ class PatientSearchBar extends StatelessWidget {
         ),
 
         // ── Search text field ──
-        TextField(
-          controller: controller,
-          onSubmitted: onSearch,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: 'Search by ${_fieldLabel(searchField).toLowerCase()}...',
-            prefixIcon: const Icon(Icons.search, color: AppColors.textTertiary),
-            suffixIcon: controller.text.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.clear, size: 20),
-                    onPressed: () {
-                      controller.clear();
-                      onSearch('');
-                    },
-                  )
-                : null,
-          ),
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (context, value, _) {
+            return TextField(
+              controller: controller,
+              onSubmitted: onSearch,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: 'Search by ${_fieldLabel(searchField).toLowerCase()}...',
+                prefixIcon:
+                    const Icon(Icons.search, color: AppColors.textTertiary),
+                suffixIcon: value.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          controller.clear();
+                          onSearch('');
+                        },
+                      )
+                    : null,
+              ),
+            );
+          },
         ),
       ],
     );

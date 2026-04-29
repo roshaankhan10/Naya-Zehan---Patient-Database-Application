@@ -33,8 +33,9 @@ class _AdmissionsListScreenState extends State<AdmissionsListScreen> {
   }
 
   Future<void> _fetchAdmissions() async {
+    final hasExistingData = _admissions.isNotEmpty;
     setState(() {
-      _loading = true;
+      _loading = !hasExistingData;
       _error = null;
     });
 
@@ -67,11 +68,13 @@ class _AdmissionsListScreenState extends State<AdmissionsListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final showFullScreenLoader = _loading && _admissions.isEmpty;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admissions'),
       ),
-      body: _loading
+      body: showFullScreenLoader
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.primary))
           : _error != null

@@ -43,23 +43,37 @@ class AuthService {
   /// Attempts login with [username] and [password].
   /// Returns `true` on success, throws on failure.
   static Future<bool> login(String username, String password) async {
-    final response = await http.post(
-      Uri.parse(ApiConfig.tokenUrl),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'username': username.trim(),
-        'password': password.trim(),
-      }),
-    );
+    http.Response response;
+
+    try {
+      response = await http
+          .post(
+            Uri.parse(ApiConfig.tokenUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'username': username.trim(),
+              'password': password.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+    } catch (e) {
+      throw AuthException(
+        'Could not reach the server at ${ApiConfig.baseUrl}. '
+        'If you are using a real phone, run with '
+        '--dart-define=API_BASE_URL=http://YOUR_IP:8000',
+      );
+    }
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       await _saveTokens(data['access'], data['refresh']);
       return true;
-    } else if (response.statusCode == 401) {
+    } else if (response.statusCode == 400 || response.statusCode == 401) {
       throw AuthException('Invalid username or password.');
     } else {
-      throw AuthException('Login failed (${response.statusCode}).');
+      throw AuthException(
+        'Login failed (${response.statusCode}): ${response.body}',
+      );
     }
   }
 

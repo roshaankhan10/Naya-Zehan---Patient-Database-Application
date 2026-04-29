@@ -4,10 +4,12 @@ import '../services/auth_service.dart';
 /// Manages authentication state across the app via ChangeNotifier.
 class AuthProvider extends ChangeNotifier {
   bool _isLoggedIn = false;
+  bool _isInitialized = false;
   bool _isLoading = false;
   String? _error;
 
   bool get isLoggedIn => _isLoggedIn;
+  bool get isInitialized => _isInitialized;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -18,6 +20,7 @@ class AuthProvider extends ChangeNotifier {
   /// Check if user has a stored token on app start.
   Future<void> _checkLoginStatus() async {
     _isLoggedIn = await AuthService.hasValidToken();
+    _isInitialized = true;
     notifyListeners();
   }
 
@@ -39,7 +42,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (e) {
-      _error = 'Connection error. Please check the server address.';
+      _error = 'Connection error: $e';
       _isLoading = false;
       notifyListeners();
       return false;

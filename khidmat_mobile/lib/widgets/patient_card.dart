@@ -48,23 +48,20 @@ class PatientCard extends StatelessWidget {
           child: Row(
             children: [
               // ── Avatar ──
-              Hero(
-                tag: 'patient_avatar_${patient.hospitalId}',
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: _avatarColor(patient.hospitalId).withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _initials(patient.name),
-                      style: TextStyle(
-                        color: _avatarColor(patient.hospitalId),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ),
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: _avatarColor(patient.hospitalId).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    _initials(patient.name),
+                    style: TextStyle(
+                      color: _avatarColor(patient.hospitalId),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
                     ),
                   ),
                 ),

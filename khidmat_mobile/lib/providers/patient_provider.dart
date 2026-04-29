@@ -9,6 +9,7 @@ enum SearchField { hospitalId, name, fatherName, surname }
 class PatientProvider extends ChangeNotifier {
   List<Patient> _patients = [];
   bool _isLoading = false;
+  bool _isRefreshing = false;
   String? _error;
   String? _nextPageUrl;
   int _totalCount = 0;
@@ -17,6 +18,7 @@ class PatientProvider extends ChangeNotifier {
 
   List<Patient> get patients => _patients;
   bool get isLoading => _isLoading;
+  bool get isRefreshing => _isRefreshing;
   String? get error => _error;
   bool get hasMore => _nextPageUrl != null;
   int get totalCount => _totalCount;
@@ -34,17 +36,14 @@ class PatientProvider extends ChangeNotifier {
     _searchQuery = query.trim();
 
     if (_searchQuery.isEmpty) {
-      _patients = [];
-      _nextPageUrl = null;
-      _totalCount = 0;
-      _error = null;
-      notifyListeners();
+      await fetchAll();
       return;
     }
 
-    _isLoading = true;
+    final hasExistingData = _patients.isNotEmpty;
+    _isLoading = !hasExistingData;
+    _isRefreshing = hasExistingData;
     _error = null;
-    _patients = [];
     notifyListeners();
 
     try {
@@ -65,6 +64,7 @@ class PatientProvider extends ChangeNotifier {
     }
 
     _isLoading = false;
+    _isRefreshing = false;
     notifyListeners();
   }
 
@@ -95,9 +95,10 @@ class PatientProvider extends ChangeNotifier {
 
   /// Fetch all patients (first page). Used when no search is active.
   Future<void> fetchAll() async {
-    _isLoading = true;
+    final hasExistingData = _patients.isNotEmpty;
+    _isLoading = !hasExistingData;
+    _isRefreshing = hasExistingData;
     _error = null;
-    _patients = [];
     _searchQuery = '';
     notifyListeners();
 
@@ -113,6 +114,7 @@ class PatientProvider extends ChangeNotifier {
     }
 
     _isLoading = false;
+    _isRefreshing = false;
     notifyListeners();
   }
 
@@ -123,6 +125,7 @@ class PatientProvider extends ChangeNotifier {
     _totalCount = 0;
     _searchQuery = '';
     _error = null;
+    _isRefreshing = false;
     notifyListeners();
   }
 }

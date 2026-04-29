@@ -24,6 +24,10 @@ class _PatientListScreenState extends State<PatientListScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<PatientProvider>().fetchAll();
+    });
   }
 
   @override
@@ -60,6 +64,8 @@ class _PatientListScreenState extends State<PatientListScreen> {
     final provider = context.read<PatientProvider>();
     if (provider.searchQuery.isNotEmpty) {
       await provider.search(provider.searchQuery);
+    } else {
+      await provider.fetchAll();
     }
   }
 
@@ -78,185 +84,152 @@ class _PatientListScreenState extends State<PatientListScreen> {
   Future<void> _logout() async {
     final auth = context.read<AuthProvider>();
     await auth.logout();
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, '/login');
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PatientProvider>();
     final theme = Theme.of(context);
+    final showFullScreenLoader = provider.isLoading && provider.patients.isEmpty;
 
     return Scaffold(
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          // ── Premium App Bar ──
-          SliverAppBar(
-            expandedHeight: 140,
-            floating: false,
-            pinned: true,
-            automaticallyImplyLeading: false,
-            backgroundColor: AppColors.primary,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: AppColors.headerGradient,
-                ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Naya Zehan',
-                                  style: theme.textTheme.headlineMedium
-                                      ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Patient Records',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                _headerIconButton(
-                                  Icons.people_outline,
-                                  'Admissions',
-                                  () => Navigator.pushNamed(
-                                      context, '/admissions'),
-                                ),
-                                const SizedBox(width: 4),
-                                _headerIconButton(
-                                  Icons.logout_rounded,
-                                  'Logout',
-                                  _logout,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Naya Zehan',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
               ),
             ),
-          ),
-
-          // ── Search Bar ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: PatientSearchBar(
-                controller: _searchController,
-                searchField: provider.searchField,
-                onFieldChanged: _onFieldChanged,
-                onSearch: _onSearch,
+            Text(
+              'Patient Records',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.85),
+                fontSize: 12,
               ),
             ),
+          ],
+        ),
+        toolbarHeight: 72,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.people_outline),
+            tooltip: 'Admissions',
+            onPressed: () => Navigator.pushNamed(context, '/admissions'),
           ),
-
-          // ── Results header ──
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            tooltip: 'Logout',
+            onPressed: _logout,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: PatientSearchBar(
+              controller: _searchController,
+              searchField: provider.searchField,
+              onFieldChanged: _onFieldChanged,
+              onSearch: _onSearch,
+            ),
+          ),
           if (provider.searchQuery.isNotEmpty || provider.patients.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      provider.searchQuery.isNotEmpty
-                          ? 'Results'
-                          : 'All Patients',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    if (provider.totalCount > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primarySurface,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${provider.totalCount} found',
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    provider.searchQuery.isNotEmpty
+                        ? 'Results'
+                        : 'All Patients',
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  Row(
+                    children: [
+                      if (provider.isRefreshing)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
+                      if (provider.totalCount > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primarySurface,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${provider.totalCount} found',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ),
             ),
+          Expanded(
+            child: showFullScreenLoader
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  )
+                : provider.error != null && provider.patients.isEmpty
+                    ? _buildErrorState(provider.error!)
+                    : provider.patients.isEmpty
+                        ? _buildEmptyState(provider.searchQuery)
+                        : RefreshIndicator(
+                            onRefresh: _onRefresh,
+                            child: ListView.builder(
+                              controller: _scrollController,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: provider.patients.length + 1,
+                              itemBuilder: (context, index) {
+                                if (index == provider.patients.length) {
+                                  return provider.hasMore
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(20),
+                                          child: Center(
+                                            child: CircularProgressIndicator(
+                                              color: AppColors.primary,
+                                              strokeWidth: 2.5,
+                                            ),
+                                          ),
+                                        )
+                                      : const SizedBox(height: 20);
+                                }
 
-          // ── Patient list ──
-          if (provider.isLoading && provider.patients.isEmpty)
-            const SliverFillRemaining(
-              child: Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
-            )
-          else if (provider.error != null && provider.patients.isEmpty)
-            SliverFillRemaining(
-              child: _buildErrorState(provider.error!),
-            )
-          else if (provider.patients.isEmpty)
-            SliverFillRemaining(
-              child: _buildEmptyState(provider.searchQuery),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    if (index == provider.patients.length) {
-                      // Loading indicator at bottom for pagination
-                      return provider.hasMore
-                          ? const Padding(
-                              padding: EdgeInsets.all(20),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.primary,
-                                  strokeWidth: 2.5,
-                                ),
-                              ),
-                            )
-                          : const SizedBox(height: 20);
-                    }
-
-                    final patient = provider.patients[index];
-                    return PatientCard(
-                      patient: patient,
-                      onTap: () => _navigateToDetail(patient),
-                    );
-                  },
-                  childCount: provider.patients.length + 1,
-                ),
-              ),
-            ),
+                                final patient = provider.patients[index];
+                                return PatientCard(
+                                  patient: patient,
+                                  onTap: () => _navigateToDetail(patient),
+                                );
+                              },
+                            ),
+                          ),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -271,25 +244,6 @@ class _PatientListScreenState extends State<PatientListScreen> {
         },
         icon: const Icon(Icons.person_add_alt_1_rounded),
         label: const Text('Add Patient'),
-      ),
-    );
-  }
-
-  Widget _headerIconButton(
-      IconData icon, String tooltip, VoidCallback onPressed) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: Colors.white, size: 20),
-        ),
       ),
     );
   }

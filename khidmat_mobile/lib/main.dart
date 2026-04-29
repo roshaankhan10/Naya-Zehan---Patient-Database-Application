@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'config/app_theme.dart';
@@ -13,6 +14,7 @@ import 'screens/admissions_list_screen.dart';
 import 'screens/admission_detail_screen.dart';
 
 void main() {
+  GoogleFonts.config.allowRuntimeFetching = false;
   runApp(const KhidmatApp());
 }
 
@@ -32,8 +34,9 @@ class KhidmatApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             title: 'Naya Zehan — Patient Records',
             theme: AppTheme.lightTheme,
-            // Route based on auth state
-            home: auth.isLoggedIn
+            home: !auth.isInitialized
+                ? const _StartupScreen()
+                : auth.isLoggedIn
                 ? const PatientListScreen()
                 : const LoginScreen(),
             routes: {
@@ -61,6 +64,22 @@ class KhidmatApp extends StatelessWidget {
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class _StartupScreen extends StatelessWidget {
+  const _StartupScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: DecoratedBox(
+        decoration: BoxDecoration(gradient: AppColors.headerGradient),
+        child: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
       ),
     );
   }
