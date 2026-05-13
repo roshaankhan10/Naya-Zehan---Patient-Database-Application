@@ -19,14 +19,18 @@ class AdmissionDetailScreen extends StatelessWidget {
     );
 
     if (response.statusCode == 204) {
-      Navigator.pop(context, true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Admission deleted successfully")),
-      );
+      if (context.mounted) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("✅ Admission deleted successfully")),
+        );
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to delete admission")),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to delete admission")),
+        );
+      }
     }
   }
 

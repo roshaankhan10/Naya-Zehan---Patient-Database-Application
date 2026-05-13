@@ -47,6 +47,8 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
       headers: {"Authorization": "Bearer $token"},
     );
 
+    if (!mounted) return;
+
     if (response.statusCode == 204) {
       Navigator.pop(context, true); // return success
     } else {

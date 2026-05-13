@@ -5,8 +5,6 @@ import 'screens/add_patient_screen.dart';
 import 'screens/patient_detail_screen.dart';
 import 'screens/add_admission_screen.dart';
 import 'screens/admissions_list_screen.dart';
-import 'screens/admission_detail_screen.dart';
-import 'screens/add_admission_screen.dart';
 
 void main() {
   runApp(const MyApp());

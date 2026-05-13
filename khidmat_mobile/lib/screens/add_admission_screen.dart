@@ -40,6 +40,7 @@ class _AddAdmissionScreenState extends State<AddAdmissionScreen> {
       }),
     );
 
+    if (!mounted) return;
     
     if (response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(

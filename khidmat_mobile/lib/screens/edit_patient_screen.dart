@@ -39,6 +39,8 @@ class _EditPatientScreenState extends State<EditPatientScreen> {
       body: jsonEncode(patient),
     );
 
+    if (!mounted) return;
+
     if (response.statusCode == 200) {
       Navigator.pop(context, true);
     } else {

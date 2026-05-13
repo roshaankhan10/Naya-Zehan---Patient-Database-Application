@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('refresh_token', data['refresh']);
 
 
-        if (context.mounted) {
+        if (mounted) {
           Navigator.pushReplacementNamed(context, '/patients');
         }
       } else {

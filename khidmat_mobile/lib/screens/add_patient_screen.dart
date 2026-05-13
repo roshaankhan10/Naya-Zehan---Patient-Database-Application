@@ -71,6 +71,8 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
 
     setState(() => _loading = false);
 
+    if (!mounted) return;
+
     if (response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ New patient added successfully")),
@@ -128,7 +130,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                       keyboardType: TextInputType.number,
                     ),
                     DropdownButtonFormField<String>(
-                      value: _sex,
+                      initialValue: _sex,
                       items: const [
                         DropdownMenuItem(value: "Male", child: Text("Male")),
                         DropdownMenuItem(value: "Female", child: Text("Female")),
@@ -137,7 +139,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                       decoration: const InputDecoration(labelText: "Sex"),
                     ),
                     DropdownButtonFormField<String>(
-                      value: _maritalStatus,
+                      initialValue: _maritalStatus,
                       items: const [
                         DropdownMenuItem(value: "Single", child: Text("Single")),
                         DropdownMenuItem(value: "Married", child: Text("Married")),

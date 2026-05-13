@@ -17,7 +17,6 @@ class _PatientListScreenState extends State<PatientListScreen> {
   String _error = '';
   List<dynamic> _patients = [];
   List<dynamic> _filteredPatients = [];
-  String _searchQuery = '';
 
   @override
   void initState() {
@@ -74,7 +73,6 @@ class _PatientListScreenState extends State<PatientListScreen> {
     }).toList();
 
     setState(() {
-      _searchQuery = query;
       _filteredPatients = results;
     });
   }
