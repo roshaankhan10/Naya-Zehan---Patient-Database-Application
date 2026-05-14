@@ -1,0 +1,32 @@
+# Secrets and credentials
+.env
+*.jks
+*.keystore
+key.properties
+
+# Build outputs
+build/
+*.apk
+*.aab
+*.ipa
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Flutter/Dart
+**/doc/api/
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub/
+
+# Android signing
+key.properties
+
+# IDE files
+.idea/
+*.iml
+.vscode/

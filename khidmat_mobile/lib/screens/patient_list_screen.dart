@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_client.dart';
+import '../services/auth_storage.dart';
 import 'add_patient_screen.dart';
 import 'patient_detail_screen.dart';
 
@@ -26,36 +25,12 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
   Future<void> _fetchPatients() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('access_token');
-
-      if (token == null) {
-        setState(() {
-          _error = 'No access token found. Please login again.';
-          _loading = false;
-        });
-        return;
-      }
-
-      final url = Uri.parse('http://127.0.0.1:8000/api/patients/');
-      final response = await http.get(
-        url,
-        headers: {'Authorization': 'Bearer $token'},
-      );
-
-      if (response.statusCode == 200) {
-        final patients = jsonDecode(response.body);
-        setState(() {
-          _patients = patients;
-          _filteredPatients = patients;
-          _loading = false;
-        });
-      } else {
-        setState(() {
-          _error = 'Failed to fetch patients: ${response.statusCode}';
-          _loading = false;
-        });
-      }
+      final patients = await ApiClient.get('/patients/');
+      setState(() {
+        _patients = patients as List<dynamic>;
+        _filteredPatients = _patients;
+        _loading = false;
+      });
     } catch (e) {
       setState(() {
         _error = 'Error: $e';
@@ -78,9 +53,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
   }
 
   Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('access_token');
-    await prefs.remove('refresh_token');
+    await AuthStorage.clearAll();
     if (mounted) Navigator.pushReplacementNamed(context, '/login');
   }
 

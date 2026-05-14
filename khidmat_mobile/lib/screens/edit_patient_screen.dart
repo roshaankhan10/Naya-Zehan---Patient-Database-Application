@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+
+import '../services/api_client.dart';
 
 class EditPatientScreen extends StatefulWidget {
   final Map<String, dynamic> patient;
@@ -27,25 +26,14 @@ class _EditPatientScreenState extends State<EditPatientScreen> {
 
     _formKey.currentState!.save();
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-
-    final response = await http.put(
-      Uri.parse("http://127.0.0.1:8000/api/patients/${patient['hospital_id']}/"),
-      headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json"
-      },
-      body: jsonEncode(patient),
-    );
-
-    if (!mounted) return;
-
-    if (response.statusCode == 200) {
+    try {
+      await ApiClient.put('/patients/${patient['hospital_id']}/', patient);
+      if (!mounted) return;
       Navigator.pop(context, true);
-    } else {
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to update patient")),
+        SnackBar(content: Text('Failed to update patient: $e')),
       );
     }
   }

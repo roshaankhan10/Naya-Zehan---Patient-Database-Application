@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+
+import '../services/api_client.dart';
 import 'edit_patient_screen.dart';
 
 class PatientDetailScreen extends StatefulWidget {
@@ -23,37 +22,25 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
   }
 
   Future<void> _refreshPatient() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-
-    final response = await http.get(
-      Uri.parse("http://127.0.0.1:8000/api/patients/${patient!['hospital_id']}/"),
-      headers: {"Authorization": "Bearer $token"},
-    );
-
-    if (response.statusCode == 200) {
+    try {
+      final updatedPatient = await ApiClient.get('/patients/${patient!['hospital_id']}/');
       setState(() {
-        patient = jsonDecode(response.body);
+        patient = updatedPatient as Map<String, dynamic>;
       });
+    } catch (_) {
+      // ignore errors here; keep the current state visible
     }
   }
 
   Future<void> _deletePatient() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-
-    final response = await http.delete(
-      Uri.parse("http://127.0.0.1:8000/api/patients/${patient!['hospital_id']}/"),
-      headers: {"Authorization": "Bearer $token"},
-    );
-
-    if (!mounted) return;
-
-    if (response.statusCode == 204) {
+    try {
+      await ApiClient.delete('/patients/${patient!['hospital_id']}/');
+      if (!mounted) return;
       Navigator.pop(context, true); // return success
-    } else {
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to delete patient")),
+        SnackBar(content: Text('Failed to delete patient: $e')),
       );
     }
   }

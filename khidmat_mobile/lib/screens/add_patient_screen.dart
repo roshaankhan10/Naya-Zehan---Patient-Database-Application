@@ -1,7 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../services/api_client.dart';
 
 class AddPatientScreen extends StatefulWidget {
   const AddPatientScreen({super.key});
@@ -39,11 +38,6 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
       _error = '';
     });
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-
-    final url = Uri.parse("http://127.0.0.1:8000/api/patients/");
-
     final body = {
       "hospital_id": _hospitalIdController.text,
       "name": _nameController.text,
@@ -60,28 +54,20 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
       "address": _addressController.text,
     };
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode(body),
-    );
-
-    setState(() => _loading = false);
-
-    if (!mounted) return;
-
-    if (response.statusCode == 201) {
+    try {
+      await ApiClient.post('/patients/', body);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ New patient added successfully")),
+        const SnackBar(content: Text('✅ New patient added successfully')),
       );
       Navigator.pop(context, true);
-    } else {
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed: ${response.body}")),
+        SnackBar(content: Text('Failed: $e')),
       );
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
 
   }

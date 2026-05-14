@@ -1,8 +1,6 @@
 // lib/screens/admissions_list_screen.dart
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../services/api_client.dart';
 import 'add_admission_screen.dart';
 import 'admission_detail_screen.dart';
 
@@ -28,23 +26,16 @@ class _AdmissionsListScreenState extends State<AdmissionsListScreen> {
   }
 
   Future<void> _fetchAdmissions() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("access_token");
-
-    final response = await http.get(
-      Uri.parse("http://127.0.0.1:8000/api/admissions/"),
-      headers: {"Authorization": "Bearer $token"},
-    );
-
-    if (response.statusCode == 200) {
+    try {
+      final admissions = await ApiClient.get('/admissions/');
       setState(() {
-        _admissions = jsonDecode(response.body);
+        _admissions = admissions as List<dynamic>;
         _filteredAdmissions = _admissions;
         _loading = false;
       });
-    } else {
+    } catch (e) {
       setState(() {
-        _error = "Failed: ${response.statusCode}";
+        _error = 'Error: $e';
         _loading = false;
       });
     }

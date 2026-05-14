@@ -36,17 +36,11 @@ router.register(r'admissions', AdmissionViewSet)
 
 def home(request):
     return HttpResponse("API is running")
+
 urlpatterns = [
-    # path('admin/', admin.site.urls),
-    # path('api/', include(router.urls)),
-    path('', home),  # 👈 ADD THIS
+    path('', home),
     path('admin/', admin.site.urls),
-    path('api/', include('records.urls')),
+    path('api/', include(router.urls)),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
-# Adding JWT authentication URLs
-# This allows for token-based authentication in the API.
-# urlpatterns += [
-#     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-#     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-# ]
-# This file defines the URL routing for the backend application, including the admin interface and API endpoints for patients and admissions.

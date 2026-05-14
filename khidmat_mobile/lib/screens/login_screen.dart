@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../config/app_config.dart';
+import '../services/auth_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final url = Uri.parse('http://172.23.55.143:8000/api/token/');
+      final url = Uri.parse('${AppConfig.baseUrl}/token/');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -38,12 +39,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        // await _storage.write(key: 'access_token', value: data['access']);
-        // await _storage.write(key: 'refresh_token', value: data['refresh']);
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', data['access']);
-        await prefs.setString('refresh_token', data['refresh']);
-
+        await AuthStorage.saveTokens(
+          access: data['access'] as String,
+          refresh: data['refresh'] as String,
+        );
 
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/patients');

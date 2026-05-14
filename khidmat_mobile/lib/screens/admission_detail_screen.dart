@@ -1,7 +1,7 @@
 // admission_detail_screen.dart
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+
+import '../services/api_client.dart';
 import 'patient_detail_screen.dart';
 
 class AdmissionDetailScreen extends StatelessWidget {
@@ -10,25 +10,18 @@ class AdmissionDetailScreen extends StatelessWidget {
   const AdmissionDetailScreen({super.key, required this.admission});
 
   Future<void> _deleteAdmission(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-
-    final response = await http.delete(
-      Uri.parse("http://127.0.0.1:8000/api/admissions/${admission['id']}/"),
-      headers: {"Authorization": "Bearer $token"},
-    );
-
-    if (response.statusCode == 204) {
+    try {
+      await ApiClient.delete('/admissions/${admission['id']}/');
       if (context.mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ Admission deleted successfully")),
+          const SnackBar(content: Text('✅ Admission deleted successfully')),
         );
       }
-    } else {
+    } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to delete admission")),
+          SnackBar(content: Text('Failed to delete admission: $e')),
         );
       }
     }
