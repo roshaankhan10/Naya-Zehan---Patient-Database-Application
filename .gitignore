@@ -30,3 +30,5 @@ key.properties
 .idea/
 *.iml
 .vscode/
+__pycache__/
+*.pyc
