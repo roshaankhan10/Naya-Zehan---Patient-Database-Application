@@ -5,6 +5,9 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+import java.util.Properties
+import java.io.FileInputStream
+
 android {
     namespace = "com.cowasjee.nayazehan"
     compileSdk = flutter.compileSdkVersion
@@ -28,27 +31,26 @@ android {
     }
 
     signingConfigs {
-        create("release") {
+        release {
             // Create key.properties and add it to gitignore for release signing.
             // When ready, provide keystore values in key.properties.
-            val keystorePropertiesFile = rootProject.file("key.properties")
+            def keystorePropertiesFile = rootProject.file('key.properties')
             if (keystorePropertiesFile.exists()) {
-                val keystoreProperties = java.util.Properties().apply {
-                    load(java.io.FileInputStream(keystorePropertiesFile))
-                }
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
+                def keystoreProperties = new Properties()
+                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
             }
         }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            shrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled true
+            isShrinkResources true
+            signingConfig signingConfigs.release
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -59,4 +61,5 @@ android {
 
 flutter {
     source = "../.."
+    minSdkVersion flutter.minSdkVersion
 }
