@@ -5,6 +5,7 @@ import 'screens/add_patient_screen.dart';
 import 'screens/patient_detail_screen.dart';
 import 'screens/add_admission_screen.dart';
 import 'screens/admissions_list_screen.dart';
+import 'utils/navigation_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,6 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Khidmat App',
       initialRoute: '/login',
@@ -24,6 +26,7 @@ class MyApp extends StatelessWidget {
         '/patients': (context) => const PatientListScreen(),
         '/add_patient': (context) => const AddPatientScreen(),
         '/admissions': (context) => const AdmissionsListScreen(),
+        '/logout': (context) => const LoginScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/patient_detail') {

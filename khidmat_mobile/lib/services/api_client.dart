@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../utils/navigation_service.dart';
 import 'auth_storage.dart';
 import '../config/app_config.dart';
 
@@ -73,10 +74,14 @@ class ApiClient {
       throw ApiException(0, 'Network error');
     }
 
-    if (kDebugMode) debugPrint('Response ${response.statusCode}: ${response.body}');
+    if (kDebugMode) debugPrint('Response ${response.statusCode}');
 
     if (response.statusCode == 401) {
       await AuthStorage.clearAll();
+      navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        '/login',
+        (route) => false,
+      );
       throw ApiException(401, 'Session expired. Please log in again.');
     }
 

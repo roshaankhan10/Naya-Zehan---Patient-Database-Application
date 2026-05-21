@@ -23,8 +23,12 @@ venv/
 .flutter-plugins-dependencies
 .pub/
 
+# Static outputs
+staticfiles/
+
 # Android signing
 key.properties
+local.properties
 
 # IDE files
 .idea/

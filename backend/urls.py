@@ -27,6 +27,13 @@ from rest_framework import routers
 from records.views import PatientViewSet, AdmissionViewSet
 
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
+
+class RateLimitedTokenObtainPairView(TokenObtainPairView):
+    @method_decorator(ratelimit(key='ip', rate='5/m', block=True))
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 
 
@@ -41,6 +48,6 @@ urlpatterns = [
     path('', home),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/', RateLimitedTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

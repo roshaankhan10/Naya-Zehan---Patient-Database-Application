@@ -10,7 +10,7 @@ import java.io.FileInputStream
 
 android {
     namespace = "com.cowasjee.nayazehan"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -48,8 +48,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled true
-            isShrinkResources true
+            minifyEnabled true
+            shrinkResources true
             signingConfig signingConfigs.release
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -61,5 +61,4 @@ android {
 
 flutter {
     source = "../.."
-    minSdkVersion flutter.minSdkVersion
 }
