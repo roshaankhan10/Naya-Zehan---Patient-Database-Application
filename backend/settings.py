@@ -67,11 +67,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
+# DATABASES = {
+#     'default': env.db(
+#         'DATABASE_URL',
+#         default='sqlite:///db.sqlite3',
+#     )
+# }
 DATABASES = {
-    'default': env.db(
-        'DATABASE_URL',
-        default='sqlite:///db.sqlite3',
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres.rrubojcigxuishtbvvge',
+        'PASSWORD': 'Khidmat@cowsjee',  # NOT the anon key
+        'HOST': 'aws-1-ap-northeast-2.pooler.supabase.com',
+        'PORT': '5432',
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [

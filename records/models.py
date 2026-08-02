@@ -41,7 +41,8 @@ from django.db import models
 
 class Patient(models.Model):
     # hospital_id = models.CharField(max_length=20, blank=True, null=True, db_index=True)
-    hospital_id = models.CharField(max_length=20, primary_key=True, default='')
+    # hospital_id = models.CharField(max_length=20, primary_key=False, default='')
+    hospital_id = models.CharField(max_length=20, blank=True, null=True, db_index=True)
     name = models.CharField(max_length=200, blank=True, null=True)
     father_name = models.CharField(max_length=100, blank=True, null=True)
     surname = models.CharField(max_length=100, blank=True, null=True)

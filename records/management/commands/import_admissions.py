@@ -19,7 +19,11 @@ class Command(BaseCommand):
                     ref_source = row[10].strip() if len(row) > 10 and row[10] else None
                     is_current = row[7].strip().lower() == 'true'
 
-                    patient = Patient.objects.get(hospital_id=hospital_id)
+                    # patient = Patient.objects.get(hospital_id=hospital_id)
+                    patient = Patient.objects.filter(hospital_id=hospital_id).first()
+                    if patient is None:
+                        print(f"Skipping: Patient ID {hospital_id} not found.")
+                        continue
                     Admission.objects.create(
                         patient=patient,
                         date_of_admission=date_of_admission,
