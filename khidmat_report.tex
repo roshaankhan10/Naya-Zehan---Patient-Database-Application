@@ -3,92 +3,199 @@
 \usepackage{geometry}
 \usepackage{hyperref}
 
-\title {Khidmat: Project Title}
+\title{Khidmat: CampusEye Smart Navigation and Assistance System}
 
 \author{
-  Student1 Full Name\\ ab01234
+  Hamza Ansari\\ ha08033
   \and
-  Student2 Full Name\\ xy09876
+  Rohaan Ahmed\\ ra08102
+  \and
+  Roshaan Khan\\ rk08103
 }
-\date{}  
+
+\date{}
 
 \begin{document}
 \maketitle
 
 % Use first person plural (we, us) even if you did the Khidmat individually.
 
-% An introduction of the project, no more than 2 sentences. Provide the highest level of detail only. Other details will come later.
-% Typically, "This project is to <short description of porject> for/at <client>."
-This project is to build a testing system to be used for the entrance examination at Habib University.
+% Introduction
+CampusEye is a smart indoor navigation and assistance system designed to improve accessibility and movement inside large buildings such as universities, hospitals, and airports. The project provides intelligent routing, real-time assistance, image-based landmark recognition, and helper coordination through a scalable mobile application.
 
-% About the client.
-Habib University is a first of its kind liberal arts and science university in Pakistan. It offers 4 major and several minor programs. Founded through the largest philanthropic grant to higher education in the history of Pakistan, it is a registered non-profit organization with \href{http://www.pcp.org.pk}{Pakistan Centre for Philanthropy (PCP)}.
+% About the client / organization
+The project was developed as part of our Khidmat initiative with the aim of addressing real-world navigation and accessibility challenges faced by users in large indoor environments. The system is designed to support students, visitors, patients, and staff by providing efficient and intelligent indoor guidance services.
 
-% About the project.
-Striving to admit the most deserving students, Habib University uses \href{https://accuplacer.collegeboard.org}{ACCUPLACER} for its entrance test but wants to move to its own test. Faculty members will contribute questions to a pool and the new examination system will choose and present questions at random from the pool to each test taker. This will ensure that each test taker gets a unique test. For our Khidmat, we will build Habib University's new examination system.
+% About the project
+Large indoor environments often lack effective navigation systems, making it difficult for users to locate rooms, departments, offices, or facilities efficiently. Existing outdoor navigation systems such as GPS are unreliable indoors and do not account for floor transitions, accessibility requirements, or real-world human movement behavior.
 
-% About the plan of work.
-We will work full time on Habib University's premises under the supervision of their Admission Manager. The goal is to develop, test, and deploy the system by the end of our Khidmat.
+For our Khidmat project, we developed CampusEye, a multi-floor smart navigation and assistance platform that combines indoor routing algorithms, image processing, and real-time helper support. The system computes optimized routes between locations, handles floor transitions intelligently, supports accessibility-aware movement, and integrates image recognition for location validation and landmark assistance.
 
-% Copy-paste this section with necessary modifcations for each week.
-\newpage % Start the report for each week on a new page.
-\section*{Week 1: 9--14 July, 2018}
+The project includes:
+\begin{itemize}
+    \item A Flutter-based mobile application interface
+    \item A backend API system for routing and data management
+    \item Multi-floor graph-based pathfinding using customized A* routing
+    \item Real-time helper tracking and coordination
+    \item Image processing for environmental and landmark recognition
+    \item Scalable architecture suitable for hospitals, airports, universities, and similar infrastructures
+\end{itemize}
 
-% A summary, maximum 2 sentences, of this week's activities.
-We spent this week meeting several stakeholders in order to understand the shortcomings of ACCUPLACER and the expectations from the new system.
+% About the plan of work
+We planned the Khidmat in multiple phases including research, requirement gathering, system design, implementation, testing, optimization, and deployment preparation. Our work involved designing indoor maps, implementing routing algorithms, integrating backend APIs, developing mobile interfaces, and testing the application under multiple real-world scenarios.
+
+\newpage
+\section*{Week 1: Requirement Gathering and Research}
+
+During the first week, we focused on understanding the problem domain, studying indoor navigation systems, and identifying the requirements of a scalable indoor assistance platform.
 
 \begin{tabular}{|l|l|l|l|}
   \hline
-  Item 	& Activity & Time & ID \\\hline\hline
-  1	& Met Admissions team & 3 hrs & st1 \\\hline
-  2	& Met faculty & 2 hrs & st2 \\\hline
-  3	& Met IT team & 3 hrs & st1, st2 \\\hline
-  $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\\hline
+  Item & Activity & Time & ID \\\hline\hline
+  1 & Studied existing indoor navigation systems & 4 hrs & st1 \\\hline
+  2 & Researched routing algorithms and A* search & 5 hrs & st2 \\\hline
+  3 & Defined system requirements and features & 4 hrs & st1, st2 \\\hline
+  4 & Planned project architecture and modules & 3 hrs & st1, st2 \\\hline
 \end{tabular}
+
+\bigskip
 
 The total time spent on the Khidmat this week is as follows.
 
 \begin{tabular}{|l|l|}
   \hline
-  ID & Total Hours\\\hline\hline
-  st1 & 7 hours\\\hline
-  st2 & 6 hours\\\hline
+  ID & Total Hours \\\hline\hline
+  st1 & 11 hours \\\hline
+  st2 & 12 hours \\\hline
 \end{tabular}
 
-% Other weeks ...
+\newpage
+\section*{Week 2: System Design and Backend Development}
+
+This week focused on backend architecture, API planning, database structuring, and implementing the initial routing framework.
+
+\begin{tabular}{|l|l|l|l|}
+  \hline
+  Item & Activity & Time & ID \\\hline\hline
+  1 & Designed backend architecture & 4 hrs & st1 \\\hline
+  2 & Developed routing APIs & 6 hrs & st2 \\\hline
+  3 & Created indoor graph representations & 5 hrs & st1, st2 \\\hline
+  4 & Integrated database models & 3 hrs & st1 \\\hline
+\end{tabular}
+
+\bigskip
+
+\begin{tabular}{|l|l|}
+  \hline
+  ID & Total Hours \\\hline\hline
+  st1 & 12 hours \\\hline
+  st2 & 11 hours \\\hline
+\end{tabular}
+
+\newpage
+\section*{Week 3: Mobile Application Development}
+
+We developed the Flutter-based frontend application and connected it with backend services for real-time routing and user interaction.
+
+\begin{tabular}{|l|l|l|l|}
+  \hline
+  Item & Activity & Time & ID \\\hline\hline
+  1 & Designed application UI screens & 5 hrs & st1 \\\hline
+  2 & Implemented navigation workflows & 6 hrs & st2 \\\hline
+  3 & Connected frontend with APIs & 4 hrs & st1, st2 \\\hline
+  4 & Added authentication and user management & 3 hrs & st1 \\\hline
+\end{tabular}
+
+\bigskip
+
+\begin{tabular}{|l|l|}
+  \hline
+  ID & Total Hours \\\hline\hline
+  st1 & 12 hours \\\hline
+  st2 & 11 hours \\\hline
+\end{tabular}
+
+\newpage
+\section*{Week 4: Routing Optimization and Image Processing}
+
+This week focused on improving route computation accuracy and integrating image processing for environmental recognition and assistance.
+
+\begin{tabular}{|l|l|l|l|}
+  \hline
+  Item & Activity & Time & ID \\\hline\hline
+  1 & Optimized A* routing logic & 6 hrs & st1, st2 \\\hline
+  2 & Added floor transition handling & 4 hrs & st1 \\\hline
+  3 & Implemented image recognition workflows & 5 hrs & st2 \\\hline
+  4 & Tested routing and localization accuracy & 4 hrs & st1, st2 \\\hline
+\end{tabular}
+
+\bigskip
+
+\begin{tabular}{|l|l|}
+  \hline
+  ID & Total Hours \\\hline\hline
+  st1 & 13 hours \\\hline
+  st2 & 12 hours \\\hline
+\end{tabular}
+
+\newpage
+\section*{Week 5: Testing and Deployment Preparation}
+
+In the final phase, we conducted extensive testing, optimized performance, resolved integration issues, and prepared the system for deployment.
+
+\begin{tabular}{|l|l|l|l|}
+  \hline
+  Item & Activity & Time & ID \\\hline\hline
+  1 & Performed routing accuracy testing & 5 hrs & st1 \\\hline
+  2 & Conducted frontend and backend integration testing & 5 hrs & st2 \\\hline
+  3 & Optimized deployment configuration & 4 hrs & st1, st2 \\\hline
+  4 & Prepared documentation and demonstrations & 3 hrs & st1 \\\hline
+\end{tabular}
+
+\bigskip
+
+\begin{tabular}{|l|l|}
+  \hline
+  ID & Total Hours \\\hline\hline
+  st1 & 12 hours \\\hline
+  st2 & 10 hours \\\hline
+\end{tabular}
 
 \newpage
 \section*{Conclusion}
 
-% Remind the reader about the project. Summarise your activities over the course of the project.
-Our project was to build a new testing system for Habib University to replace ACCUPLACER for its entrance examination. We started by meeting all the stakeholders to understand their expectations from the new system. We then identified the necessary tools to build the required system and trained ourselves on them. Development and testing were carried out in collaboration with the IT team so that any shortcomings were identified and catered to as we went along. The system was then deployed and officers from the Admissions Team were trained to use it.
+Our Khidmat project focused on developing CampusEye, a smart indoor navigation and assistance platform capable of handling complex multi-floor routing and real-time user assistance. Throughout the project, we researched indoor navigation challenges, designed scalable architectures, implemented optimized routing systems, developed mobile interfaces, integrated image processing capabilities, and performed extensive testing.
+
+The final system demonstrates how intelligent indoor navigation can improve accessibility, reduce confusion in large infrastructures, and provide scalable solutions for environments such as hospitals, airports, and educational institutions. Through this Khidmat, we gained practical experience in software engineering, system integration, mobile development, routing algorithms, backend deployment, and real-world problem solving.
 
 \newpage
 \thispagestyle{empty}
-% Show your external supervisor your report, especially the weekly upates; have them sign a printed copy of this page; scan the signed page; and include the scanned page in this document as an image.
 
 \begin{center}
   {\Large\bf Khidmat Completion Form}\\[5pt]
-  \small To be completed by the external supervisor.  
+  \small To be completed by the external supervisor.
 \end{center}
+
 \bigskip
 
 \noindent{\it Please use the space below to provide any comments you may have on the students' performance, the Khidmat program, or any other feedback you want to share with Habib University's Khidmat committee. We can also be reached at \href{mailto:khidmat@sse.habib.edu.pk}{khidmat@sse.habib.edu.pk}.}
+
 \vfill
 
 \begin{center}
   \rule{.8\textwidth}{.5pt}
 \end{center}
+
 \medskip
 
-% Insert your name below.
+I hereby certify that I supervised Hamza Ansari, Rohaan Ahmed, and Roshaan Khan for the Khidmat described in this report. Furthermore, that I have read and agree with the weekly updates included in this report. My signature below marks the successful completion of the work undertaken for the Khidmat.
 
-I hereby certify that I supervised XXX and XXX for the Khidmat described in this report. Furthermore, that I have read and agree with the weekly updates included in this report. My signature below marks the successful completion of the work undertaken for the Khidmat.\\
 \bigskip
 \bigskip
 
-\noindent\begin{tabular}{@{}p{.6\textwidth}@{\hspace{.1\textwidth}}p{.3\textwidth}}
-  \hrulefill &   \hrulefill \\
+\noindent
+\begin{tabular}{@{}p{.6\textwidth}@{\hspace{.1\textwidth}}p{.3\textwidth}}
+  \hrulefill & \hrulefill \\
   Name and signature & Location and date
 \end{tabular}
 
