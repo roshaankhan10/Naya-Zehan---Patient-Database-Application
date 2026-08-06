@@ -1,5 +1,6 @@
 # Secrets and credentials
 .env
+/backend/.env
 *.jks
 *.keystore
 key.properties

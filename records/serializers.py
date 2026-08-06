@@ -3,7 +3,27 @@ from rest_framework import serializers
 import re
 from datetime import date
 from .models import Patient, Admission
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 
+
+class StaffCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, validators=[validate_password])
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
+
+    def create(self, validated_data):
+        # is_staff defaults to False -> read-only per IsAdminOrReadOnly
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data.get('email', ''),
+            password=validated_data['password'],
+        )
+        return user
+
+        
 class PatientSerializer(serializers.ModelSerializer):
     hospital_id = serializers.CharField(max_length=20)
     name = serializers.CharField(max_length=255, min_length=2)
