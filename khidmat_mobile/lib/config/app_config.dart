@@ -5,7 +5,7 @@ class AppConfig {
 
   static const baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'http://172.23.55.143:8000/api',
+    defaultValue: 'https://naya-zehan-backend.onrender.com/api',
   );
 
   static void verifyUrl() {
