@@ -23,12 +23,28 @@ class _PatientListScreenState extends State<PatientListScreen> {
     _fetchPatients();
   }
 
-  Future<void> _fetchPatients() async {
+  // Future<void> _fetchPatients() async {
+  //   try {
+  //     final patients = await ApiClient.get('/patients/');
+  //     setState(() {
+  //       _patients = patients as List<dynamic>;
+  //       _filteredPatients = _patients;
+  //       _loading = false;
+  //     });
+  //   } catch (e) {
+  //     setState(() {
+  //       _error = 'Error: $e';
+  //       _loading = false;
+  //     });
+  //   }
+  // }
+    Future<void> _fetchPatients() async {
     try {
-      final patients = await ApiClient.get('/patients/');
+      final response = await ApiClient.get('/patients/');
+      final results = (response as Map<String, dynamic>)['results'] as List<dynamic>;
       setState(() {
-        _patients = patients as List<dynamic>;
-        _filteredPatients = _patients;
+        _patients = results;
+        _filteredPatients = results;
         _loading = false;
       });
     } catch (e) {
