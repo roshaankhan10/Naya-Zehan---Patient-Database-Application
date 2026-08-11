@@ -31,7 +31,8 @@ class PatientSerializer(serializers.ModelSerializer):
     surname = serializers.CharField(max_length=100, allow_blank=True, required=False)
     nic = serializers.CharField(max_length=25, allow_blank=True, required=False)
     dob = serializers.DateField(required=False, allow_null=True)
-    age = serializers.IntegerField(required=False, min_value=0, allow_null=True)
+    # age = serializers.IntegerField(required=False, min_value=0, allow_null=True)
+    age = serializers.CharField(max_length=10, allow_blank=True, required=False)
     sex = serializers.CharField(max_length=10, allow_blank=True, required=False)
     marital_status = serializers.CharField(max_length=20, allow_blank=True, required=False)
     religion = serializers.CharField(max_length=50, allow_blank=True, required=False)
@@ -49,10 +50,10 @@ class PatientSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Date of birth cannot be in the future.')
         return value
 
-    def validate_age(self, value):
-        if value is not None and value < 0:
-            raise serializers.ValidationError('Age must be a positive number.')
-        return value
+    # def validate_age(self, value):
+    #     if value is not None and value < 0:
+    #         raise serializers.ValidationError('Age must be a positive number.')
+    #     return value
 
     class Meta:
         model = Patient
