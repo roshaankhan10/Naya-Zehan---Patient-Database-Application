@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
 import '../services/auth_storage.dart';
@@ -15,7 +16,12 @@ class _PatientListScreenState extends State<PatientListScreen> {
   bool _loading = true;
   String _error = '';
   List<dynamic> _patients = [];
-  List<dynamic> _filteredPatients = [];
+  String? _nextPageUrl;
+  String? _previousPageUrl;
+  int _currentPage = 1;
+  int _totalCount = 0;
+  Timer? _debounce;
+  String _currentQuery = '';
 
   @override
   void initState() {
@@ -23,28 +29,38 @@ class _PatientListScreenState extends State<PatientListScreen> {
     _fetchPatients();
   }
 
-  // Future<void> _fetchPatients() async {
-  //   try {
-  //     final patients = await ApiClient.get('/patients/');
-  //     setState(() {
-  //       _patients = patients as List<dynamic>;
-  //       _filteredPatients = _patients;
-  //       _loading = false;
-  //     });
-  //   } catch (e) {
-  //     setState(() {
-  //       _error = 'Error: $e';
-  //       _loading = false;
-  //     });
-  //   }
-  // }
-    Future<void> _fetchPatients() async {
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  String _stripApiPrefix(String fullUrl) {
+    final uri = Uri.parse(fullUrl);
+    final pathAndQuery = '${uri.path}${uri.hasQuery ? '?${uri.query}' : ''}';
+    return pathAndQuery.replaceFirst('/api', '');
+  }
+
+  Future<void> _fetchPatients({String query = '', int page = 1}) async {
+    setState(() {
+      _loading = true;
+      _error = '';
+    });
     try {
-      final response = await ApiClient.get('/patients/');
-      final results = (response as Map<String, dynamic>)['results'] as List<dynamic>;
+      final params = <String>[];
+      if (query.isNotEmpty) params.add('search=${Uri.encodeQueryComponent(query)}');
+      if (page > 1) params.add('page=$page');
+      final path = '/patients/${params.isNotEmpty ? '?${params.join('&')}' : ''}';
+
+      final response = await ApiClient.get(path);
+      final map = response as Map<String, dynamic>;
       setState(() {
-        _patients = results;
-        _filteredPatients = results;
+        _patients = map['results'] as List<dynamic>;
+        _nextPageUrl = map['next'] as String?;
+        _previousPageUrl = map['previous'] as String?;
+        _totalCount = map['count'] as int? ?? 0;
+        _currentQuery = query;
+        _currentPage = page;
         _loading = false;
       });
     } catch (e) {
@@ -55,16 +71,52 @@ class _PatientListScreenState extends State<PatientListScreen> {
     }
   }
 
-  void _filterPatients(String query) {
-    final results = _patients.where((p) {
-      final name = (p['name'] ?? '').toString().toLowerCase();
-      final id = (p['hospital_id'] ?? '').toString().toLowerCase();
-      return name.contains(query.toLowerCase()) ||
-          id.contains(query.toLowerCase());
-    }).toList();
+  Future<void> _goToNextPage() async {
+    if (_nextPageUrl == null) return;
+    setState(() => _loading = true);
+    try {
+      final response = await ApiClient.get(_stripApiPrefix(_nextPageUrl!));
+      final map = response as Map<String, dynamic>;
+      setState(() {
+        _patients = map['results'] as List<dynamic>;
+        _nextPageUrl = map['next'] as String?;
+        _previousPageUrl = map['previous'] as String?;
+        _currentPage += 1;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Error: $e';
+        _loading = false;
+      });
+    }
+  }
 
-    setState(() {
-      _filteredPatients = results;
+  Future<void> _goToPreviousPage() async {
+    if (_previousPageUrl == null) return;
+    setState(() => _loading = true);
+    try {
+      final response = await ApiClient.get(_stripApiPrefix(_previousPageUrl!));
+      final map = response as Map<String, dynamic>;
+      setState(() {
+        _patients = map['results'] as List<dynamic>;
+        _nextPageUrl = map['next'] as String?;
+        _previousPageUrl = map['previous'] as String?;
+        _currentPage -= 1;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Error: $e';
+        _loading = false;
+      });
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      _fetchPatients(query: query, page: 1);
     });
   }
 
@@ -72,6 +124,8 @@ class _PatientListScreenState extends State<PatientListScreen> {
     await AuthStorage.clearAll();
     if (mounted) Navigator.pushReplacementNamed(context, '/login');
   }
+
+  int get _totalPages => _totalCount == 0 ? 1 : (( _totalCount + 24) ~/ 25);
 
   @override
   Widget build(BuildContext context) {
@@ -87,9 +141,9 @@ class _PatientListScreenState extends State<PatientListScreen> {
                 final added = await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const AddPatientScreen()),
-              );
-              if (added == true) _fetchPatients();
-            },
+                );
+                if (added == true) _fetchPatients(query: _currentQuery, page: _currentPage);
+              },
             ),
           ),
           Tooltip(
@@ -116,10 +170,10 @@ class _PatientListScreenState extends State<PatientListScreen> {
             padding: const EdgeInsets.all(8),
             child: TextField(
               decoration: const InputDecoration(
-                labelText: 'Search by Name or ID',
+                labelText: 'Search by Name, Father Name, Surname, or ID',
                 prefixIcon: Icon(Icons.search),
               ),
-              onChanged: _filterPatients,
+              onChanged: _onSearchChanged,
             ),
           ),
           Expanded(
@@ -128,12 +182,12 @@ class _PatientListScreenState extends State<PatientListScreen> {
                 : _error.isNotEmpty
                     ? Center(child: Text(_error, style: const TextStyle(color: Colors.red)))
                     : ListView.builder(
-                        itemCount: _filteredPatients.length,
+                        itemCount: _patients.length,
                         itemBuilder: (context, index) {
-                          final patient = _filteredPatients[index];
+                          final patient = _patients[index];
                           return ListTile(
                             title: Text(patient['name'] ?? 'Unknown'),
-                            subtitle: Text('ID: ${patient['hospital_id']}'),
+                            subtitle: Text('ID: ${patient['hospital_id'] ?? 'N/A'}'),
                             onTap: () async {
                               final deleted = await Navigator.push(
                                 context,
@@ -141,12 +195,32 @@ class _PatientListScreenState extends State<PatientListScreen> {
                                   builder: (_) => PatientDetailScreen(patient: patient),
                                 ),
                               );
-                              if (deleted == true) _fetchPatients();
+                              if (deleted == true) {
+                                _fetchPatients(query: _currentQuery, page: _currentPage);
+                              }
                             },
                           );
                         },
                       ),
           ),
+          if (!_loading && _error.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _previousPageUrl != null ? _goToPreviousPage : null,
+                  ),
+                  Text('Page $_currentPage of $_totalPages  •  $_totalCount total'),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _nextPageUrl != null ? _goToNextPage : null,
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

@@ -24,6 +24,9 @@ class ApiClient {
   static final _client = http.Client();
   static const _timeout = Duration(seconds: 30);
 
+  // Guards against multiple simultaneous refresh attempts racing each other.
+  static Future<bool>? _refreshInFlight;
+
   static Future<Map<String, String>> _authHeaders() async {
     final token = await AuthStorage.getAccessToken();
     if (token == null) {
@@ -52,10 +55,54 @@ class ApiClient {
 
   static Future<dynamic> delete(String path) => _request('DELETE', path);
 
+  /// Attempts to refresh the access token using the stored refresh token.
+  /// Returns true if refresh succeeded, false otherwise.
+  /// Safe to call concurrently — only one actual refresh request is made.
+  static Future<bool> _refreshAccessToken() {
+    // If a refresh is already in progress, wait for that one instead of
+    // starting a second one (avoids racing against token rotation).
+    _refreshInFlight ??= _doRefresh();
+    return _refreshInFlight!.whenComplete(() {
+      _refreshInFlight = null;
+    });
+  }
+
+  static Future<bool> _doRefresh() async {
+    final refreshToken = await AuthStorage.getRefreshToken();
+    if (refreshToken == null) return false;
+
+    try {
+      final uri = _buildUri('/token/refresh/');
+      final response = await _client
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'refresh': refreshToken}),
+          )
+          .timeout(_timeout);
+
+      if (response.statusCode != 200) return false;
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final newAccess = data['access'] as String?;
+      if (newAccess == null) return false;
+
+      // SIMPLE_JWT has ROTATE_REFRESH_TOKENS=True, so a new refresh token
+      // may also come back — save it if present, otherwise keep the old one.
+      final newRefresh = data['refresh'] as String? ?? refreshToken;
+
+      await AuthStorage.saveTokens(access: newAccess, refresh: newRefresh);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<dynamic> _request(
     String method,
     String path, {
     Map<String, dynamic>? body,
+    bool isRetry = false,
   }) async {
     final uri = _buildUri(path);
     final headers = await _authHeaders();
@@ -77,6 +124,15 @@ class ApiClient {
     if (kDebugMode) debugPrint('Response ${response.statusCode}');
 
     if (response.statusCode == 401) {
+      // Only attempt a refresh once per request, to avoid infinite retry loops.
+      if (!isRetry) {
+        final refreshed = await _refreshAccessToken();
+        if (refreshed) {
+          return _request(method, path, body: body, isRetry: true);
+        }
+      }
+
+      // Refresh failed (or already retried once) — session is truly over.
       await AuthStorage.clearAll();
       navigatorKey.currentState?.pushNamedAndRemoveUntil(
         '/login',
