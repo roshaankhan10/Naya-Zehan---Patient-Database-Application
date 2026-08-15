@@ -12,15 +12,16 @@
 #     path('api/token/', RateLimitedTokenObtainPairView.as_view(), name='token_obtain_pair'),
 #     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 # ]
+
+
 from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import path, include
 from rest_framework import routers
+from records.views import PatientViewSet, AdmissionViewSet, StaffCreateView, home
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
-
-from records.views import PatientViewSet, AdmissionViewSet, StaffCreateView, home
 
 
 class RateLimitedTokenObtainPairView(TokenObtainPairView):
