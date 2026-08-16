@@ -30,6 +30,48 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
   bool _loading = false;
   String _error = '';
 
+  // Future<void> _submit() async {
+  //   if (!_formKey.currentState!.validate()) return;
+
+  //   setState(() {
+  //     _loading = true;
+  //     _error = '';
+  //   });
+
+  //   final body = {
+  //     "hospital_id": _hospitalIdController.text,
+  //     "name": _nameController.text,
+  //     "father_name": _fatherNameController.text,
+  //     "surname": _surnameController.text,
+  //     "nic": _nicController.text,
+  //     "dob": _dobController.text,
+  //     "age": int.tryParse(_ageController.text),
+  //     "sex": _sex,
+  //     "marital_status": _maritalStatus,
+  //     "religion": _religionController.text,
+  //     "education": _educationController.text,
+  //     "occupation": _occupationController.text,
+  //     "address": _addressController.text,
+  //   };
+
+  //   try {
+  //     await ApiClient.post('/patients/', body);
+  //     if (!mounted) return;
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('✅ New patient added successfully')),
+  //     );
+  //     Navigator.pop(context, true);
+  //   } catch (e) {
+  //     if (!mounted) return;
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Failed: $e')),
+  //     );
+  //   } finally {
+  //     if (mounted) setState(() => _loading = false);
+  //   }
+
+  // }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -38,21 +80,27 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
       _error = '';
     });
 
-    final body = {
+    final body = <String, dynamic>{
       "hospital_id": _hospitalIdController.text,
       "name": _nameController.text,
-      "father_name": _fatherNameController.text,
-      "surname": _surnameController.text,
-      "nic": _nicController.text,
-      "dob": _dobController.text,
-      "age": int.tryParse(_ageController.text),
-      "sex": _sex,
-      "marital_status": _maritalStatus,
-      "religion": _religionController.text,
-      "education": _educationController.text,
-      "occupation": _occupationController.text,
-      "address": _addressController.text,
     };
+
+    void addIfNotEmpty(String key, String value) {
+      if (value.trim().isNotEmpty) body[key] = value.trim();
+    }
+
+    addIfNotEmpty("father_name", _fatherNameController.text);
+    addIfNotEmpty("surname", _surnameController.text);
+    addIfNotEmpty("nic", _nicController.text);
+    addIfNotEmpty("dob", _dobController.text);
+    addIfNotEmpty("age", _ageController.text); // sent as string, matches backend
+    addIfNotEmpty("religion", _religionController.text);
+    addIfNotEmpty("education", _educationController.text);
+    addIfNotEmpty("occupation", _occupationController.text);
+    addIfNotEmpty("address", _addressController.text);
+
+    if (_sex != null) body["sex"] = _sex;
+    if (_maritalStatus != null) body["marital_status"] = _maritalStatus;
 
     try {
       await ApiClient.post('/patients/', body);
@@ -63,15 +111,15 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
+      setState(() => _error = 'Failed to save: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed: $e')),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
-
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -27,7 +27,7 @@ class _EditPatientScreenState extends State<EditPatientScreen> {
     _formKey.currentState!.save();
 
     try {
-      await ApiClient.put('/patients/${patient['hospital_id']}/', patient);
+      await ApiClient.put('/patients/${patient['id']}/', patient);
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {

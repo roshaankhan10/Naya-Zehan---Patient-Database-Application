@@ -25,6 +25,7 @@ class StaffCreateSerializer(serializers.ModelSerializer):
 
         
 class PatientSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     hospital_id = serializers.CharField(max_length=20)
     name = serializers.CharField(max_length=255, min_length=2)
     father_name = serializers.CharField(max_length=100, allow_blank=True, required=False)
@@ -58,6 +59,7 @@ class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = [
+            'id',
             'hospital_id',
             'name',
             'father_name',
