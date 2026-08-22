@@ -21,9 +21,10 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
     patient = widget.patient;
   }
 
+  
   Future<void> _refreshPatient() async {
     try {
-      final updatedPatient = await ApiClient.get('/patients/${patient!['hospital_id']}/');
+      final updatedPatient = await ApiClient.get('/patients/${patient!['id']}/');
       setState(() {
         patient = updatedPatient as Map<String, dynamic>;
       });
@@ -34,7 +35,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
 
   Future<void> _deletePatient() async {
     try {
-      await ApiClient.delete('/patients/${patient!['hospital_id']}/');
+      await ApiClient.delete('/patients/${patient!['id']}/');
       if (!mounted) return;
       Navigator.pop(context, true); // return success
     } catch (e) {

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import path, include
 from rest_framework import routers
-from records.views import PatientViewSet, AdmissionViewSet, StaffCreateView, home
+from records.views import PatientViewSet, AdmissionViewSet, StaffCreateView, MeView, home
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
@@ -22,6 +22,7 @@ urlpatterns = [
     path('', home),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('api/me/', MeView.as_view(), name='me'),
     path('api/staff/create/', StaffCreateView.as_view(), name='staff-create'),
     path('api/token/', RateLimitedTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

@@ -16,6 +16,9 @@ from rest_framework import status
 from .serializers import StaffCreateSerializer
 from .permissions import IsAdminOrReadOnly
 
+from rest_framework.permissions import IsAuthenticated
+
+
 class StaffCreateView(APIView):
     permission_classes = [IsAdminOrReadOnly]  # write actions require is_staff/is_superuser
 
@@ -29,6 +32,17 @@ class StaffCreateView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'username': user.username,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser,
+        })
+    
 class PatientViewSet(viewsets.ModelViewSet):
     queryset = Patient.objects.all().order_by('id')
     serializer_class = PatientSerializer
