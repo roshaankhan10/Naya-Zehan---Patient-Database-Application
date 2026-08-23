@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
 import '../services/auth_storage.dart';
+import '../services/api_client.dart';
 import '../utils/validators.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -52,11 +53,24 @@ class _LoginScreenState extends State<LoginScreen> {
         await AuthStorage.saveTokens(
           access: data['access'] as String,
           refresh: data['refresh'] as String,
-        );
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/patients');
-        }
-      } else if (response.statusCode == 401 || response.statusCode == 400) {
+      );
+
+  // Fetch and store role info
+      try {
+        final meResponse = await ApiClient.get('/me/');
+        final isAdmin = (meResponse['is_staff'] == true) || (meResponse['is_superuser'] == true);
+        await AuthStorage.saveIsAdmin(isAdmin);
+      } catch (_) {
+        // Default to non-admin if this fails, safer than defaulting to admin
+        await AuthStorage.saveIsAdmin(false);
+      }
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/patients');
+      }
+    }
+    
+     else if (response.statusCode == 401 || response.statusCode == 400) {
         setState(() => _error = 'Invalid username or password.');
       } else if (response.statusCode == 429) {
         setState(() => _error = 'Too many attempts. Please wait and try again.');

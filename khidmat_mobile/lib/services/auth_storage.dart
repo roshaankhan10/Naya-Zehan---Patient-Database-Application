@@ -12,6 +12,7 @@ class AuthStorage {
 
   static const _keyAccessToken = 'jwt_access_token';
   static const _keyRefreshToken = 'jwt_refresh_token';
+  static const _keyIsAdmin = 'is_admin';
 
   static Future<void> saveTokens({
     required String access,
@@ -26,6 +27,14 @@ class AuthStorage {
 
   static Future<String?> getRefreshToken() =>
       _storage.read(key: _keyRefreshToken);
+
+  static Future<void> saveIsAdmin(bool isAdmin) =>
+      _storage.write(key: _keyIsAdmin, value: isAdmin.toString());
+
+  static Future<bool> getIsAdmin() async {
+    final value = await _storage.read(key: _keyIsAdmin);
+    return value == 'true';
+  }
 
   static Future<void> clearAll() => _storage.deleteAll();
 }

@@ -15,19 +15,28 @@ class PatientListScreen extends StatefulWidget {
 class _PatientListScreenState extends State<PatientListScreen> {
   bool _loading = true;
   String _error = '';
-  List<dynamic> _patients = [];
+  List<dynamic> _patients = []; 
   String? _nextPageUrl;
   String? _previousPageUrl;
   int _currentPage = 1;
   int _totalCount = 0;
   Timer? _debounce;
   String _currentQuery = '';
+  bool _isAdmin = false;
+
 
   @override
   void initState() {
     super.initState();
+    _loadIsAdmin(); // NEW
     _fetchPatients();
   }
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _fetchPatients();
+  // }
 
   @override
   void dispose() {
@@ -69,6 +78,12 @@ class _PatientListScreenState extends State<PatientListScreen> {
         _loading = false;
       });
     }
+  }
+
+  
+  Future<void> _loadIsAdmin() async { // NEW
+    final isAdmin = await AuthStorage.getIsAdmin();
+    if (mounted) setState(() => _isAdmin = isAdmin);
   }
 
   Future<void> _goToNextPage() async {
@@ -133,15 +148,16 @@ class _PatientListScreenState extends State<PatientListScreen> {
       appBar: AppBar(
         title: const Text('Patients'),
         actions: [
-          Tooltip(
-            message: 'Add patient',
-            child: IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () async {
-                final added = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddPatientScreen()),
-                );
+          if (_isAdmin)
+            Tooltip(
+              message: 'Add patient',
+              child: IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () async {
+                  final added = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddPatientScreen()),
+                  );
                 if (added == true) _fetchPatients(query: _currentQuery, page: _currentPage);
               },
             ),

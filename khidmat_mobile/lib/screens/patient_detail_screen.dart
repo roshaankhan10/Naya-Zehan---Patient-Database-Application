@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/api_client.dart';
 import 'edit_patient_screen.dart';
+import '../services/auth_storage.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final Map<String, dynamic> patient;
@@ -14,13 +15,19 @@ class PatientDetailScreen extends StatefulWidget {
 
 class _PatientDetailScreenState extends State<PatientDetailScreen> {
   Map<String, dynamic>? patient;
+  bool _isAdmin = false; // NEW
 
   @override
   void initState() {
     super.initState();
     patient = widget.patient;
+    _loadIsAdmin(); // NEW
   }
 
+  Future<void> _loadIsAdmin() async { // NEW
+    final isAdmin = await AuthStorage.getIsAdmin();
+    if (mounted) setState(() => _isAdmin = isAdmin);
+  }
   
   Future<void> _refreshPatient() async {
     try {
@@ -86,47 +93,49 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
       appBar: AppBar(
         title: Text("Patient: ${patient!['name']}"),
         actions: [
-          Tooltip(
-            message: "edit patient details",
+          if (_isAdmin) 
+              Tooltip(
+                message: "edit patient details",
+                child: IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                      builder: (_) => EditPatientScreen(patient: patient!),
+                    ),
+                  );
+                  if (result == true) {
+                    await _refreshPatient();
+                  }
+                },
+              )
+              ),
+          if (_isAdmin)
+            Tooltip(
+            message: "delete patient",
             child: IconButton(
-              icon: const Icon(Icons.edit),
+              icon: const Icon(Icons.delete),
               onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                  builder: (_) => EditPatientScreen(patient: patient!),
-                ),
-              );
-              if (result == true) {
-                await _refreshPatient();
-              }
-            },
-          )
-          ),
-          Tooltip(
-          message: "delete patient",
-          child: IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text("Delete Patient"),
-                  content: const Text("Are you sure you want to delete this patient?"),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text("Cancel")),
-                    TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text("Delete")),
-                  ],
-                ),
-              );
-              if (confirm == true) {
-                await _deletePatient();
-              }
-            },
-          ),
-          )
-        ],
-      ),
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text("Delete Patient"),
+                    content: const Text("Are you sure you want to delete this patient?"),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text("Cancel")),
+                      TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text("Delete")),
+                    ],
+                  ),
+                );
+                if (confirm == true) {
+                  await _deletePatient();
+                }
+              },
+            ),
+            )
+          ],
+        ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(12),
         child: Column(
