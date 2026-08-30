@@ -21,8 +21,15 @@ class _AddAdmissionScreenState extends State<AddAdmissionScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || _date == null) return;
 
+    // final body = {
+    //   "patient": widget.hospitalId,
+    //   "date_of_admission": _date!.toIso8601String().split('T')[0],
+    //   "ward_no": _wardController.text,
+    //   "ref_source": _refController.text,
+    //   "is_current": _isCurrent,
+    // };
     final body = {
-      "patient": widget.hospitalId,
+      "patient": int.tryParse(widget.hospitalId),
       "date_of_admission": _date!.toIso8601String().split('T')[0],
       "ward_no": _wardController.text,
       "ref_source": _refController.text,

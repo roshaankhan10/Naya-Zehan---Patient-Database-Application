@@ -25,12 +25,29 @@ class _AdmissionsListScreenState extends State<AdmissionsListScreen> {
     _searchController.addListener(_applySearch);
   }
 
+  // Future<void> _fetchAdmissions() async {
+  //   try {
+  //     final admissions = await ApiClient.get('/admissions/');
+  //     setState(() {
+  //       _admissions = admissions as List<dynamic>;
+  //       _filteredAdmissions = _admissions;
+  //       _loading = false;
+  //     });
+  //   } catch (e) {
+  //     setState(() {
+  //       _error = 'Error: $e';
+  //       _loading = false;
+  //     });
+  //   }
+  // }
+
   Future<void> _fetchAdmissions() async {
     try {
-      final admissions = await ApiClient.get('/admissions/');
+      final response = await ApiClient.get('/admissions/');
+      final results = (response as Map<String, dynamic>)['results'] as List<dynamic>;
       setState(() {
-        _admissions = admissions as List<dynamic>;
-        _filteredAdmissions = _admissions;
+        _admissions = results;
+        _filteredAdmissions = results;
         _loading = false;
       });
     } catch (e) {
@@ -40,7 +57,6 @@ class _AdmissionsListScreenState extends State<AdmissionsListScreen> {
       });
     }
   }
-
   void _applySearch() {
     final query = _searchController.text.toLowerCase();
     setState(() {

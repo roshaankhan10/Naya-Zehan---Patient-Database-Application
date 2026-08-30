@@ -15,18 +15,35 @@ class PatientDetailScreen extends StatefulWidget {
 
 class _PatientDetailScreenState extends State<PatientDetailScreen> {
   Map<String, dynamic>? patient;
-  bool _isAdmin = false; // NEW
+  bool _isAdmin = false;
+  List<dynamic> _admissions = [];
+  bool _admissionsLoading = true;
 
   @override
   void initState() {
     super.initState();
     patient = widget.patient;
     _loadIsAdmin(); // NEW
+    _fetchAdmissions(); // NEW
   }
 
   Future<void> _loadIsAdmin() async { // NEW
     final isAdmin = await AuthStorage.getIsAdmin();
     if (mounted) setState(() => _isAdmin = isAdmin);
+  }
+
+  Future<void> _fetchAdmissions() async {
+    setState(() => _admissionsLoading = true);
+    try {
+      final response = await ApiClient.get('/admissions/?patient=${patient!['id']}');
+      final results = (response as Map<String, dynamic>)['results'] as List<dynamic>;
+      setState(() {
+        _admissions = results;
+        _admissionsLoading = false;
+      });
+    } catch (_) {
+      setState(() => _admissionsLoading = false);
+    }
   }
   
   Future<void> _refreshPatient() async {
@@ -167,19 +184,68 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
       ),
     );
   }
-  Widget _buildAdmissionsSection() {
-    final admissions = patient!['admissions'] ?? []; // <-- add ! here
+  // Widget _buildAdmissionsSection() {
+  //   final admissions = patient!['admissions'] ?? []; // <-- add ! here
 
-    if (admissions.isEmpty) {
+  //   if (admissions.isEmpty) {
+  //     return _buildCard("Admissions", [
+  //       const Text("No admissions found."),
+  //       ElevatedButton.icon(
+  //         onPressed: () {
+  //           Navigator.pushNamed(
+  //             context,
+  //             '/add_admission',
+  //             arguments: patient!['hospital_id'], // <-- add ! here
+  //           );
+  //         },
+  //         icon: const Icon(Icons.add),
+  //         label: const Text("Add Admission"),
+  //       )
+  //     ]);
+  //   }
+
+  //   return _buildCard("Admissions", [
+  //     ...admissions.map<Widget>((adm) {
+  //       return ListTile(
+  //         title: Text("Date: ${adm['date_of_admission']}"),
+  //         subtitle: Text("Ward: ${adm['ward_no']} | Ref: ${adm['ref_source'] ?? 'N/A'}"),
+  //         trailing: adm['is_current'] == true
+  //             ? const Icon(Icons.check_circle, color: Colors.green)
+  //             : null,
+  //       );
+  //     }).toList(),
+  //     ElevatedButton.icon(
+  //       onPressed: () {
+  //         Navigator.pushNamed(
+  //           context,
+  //           '/add_admission',
+  //           arguments: patient!['hospital_id'], // <-- add ! here
+  //         );
+  //       },
+  //       icon: const Icon(Icons.add),
+  //       label: const Text("Add Admission"),
+  //     )
+  //   ]);
+  // }
+
+  Widget _buildAdmissionsSection() {
+    if (_admissionsLoading) {
+      return _buildCard("Admissions", [
+        const Center(child: CircularProgressIndicator()),
+      ]);
+    }
+
+    if (_admissions.isEmpty) {
       return _buildCard("Admissions", [
         const Text("No admissions found."),
         ElevatedButton.icon(
-          onPressed: () {
-            Navigator.pushNamed(
+          onPressed: () async {
+            final added = await Navigator.pushNamed(
               context,
               '/add_admission',
-              arguments: patient!['hospital_id'], // <-- add ! here
+              arguments: patient!['id'].toString(),
             );
+            if (added == true) _fetchAdmissions();
           },
           icon: const Icon(Icons.add),
           label: const Text("Add Admission"),
@@ -188,7 +254,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
     }
 
     return _buildCard("Admissions", [
-      ...admissions.map<Widget>((adm) {
+      ..._admissions.map<Widget>((adm) {
         return ListTile(
           title: Text("Date: ${adm['date_of_admission']}"),
           subtitle: Text("Ward: ${adm['ward_no']} | Ref: ${adm['ref_source'] ?? 'N/A'}"),
@@ -198,17 +264,17 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
         );
       }).toList(),
       ElevatedButton.icon(
-        onPressed: () {
-          Navigator.pushNamed(
+        onPressed: () async {
+          final added = await Navigator.pushNamed(
             context,
             '/add_admission',
-            arguments: patient!['hospital_id'], // <-- add ! here
+            arguments: patient!['id'].toString(),
           );
+          if (added == true) _fetchAdmissions();
         },
         icon: const Icon(Icons.add),
         label: const Text("Add Admission"),
       )
     ]);
   }
-
 }

@@ -71,7 +71,8 @@ class AdmissionDetailScreen extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (context) => PatientDetailScreen(
                       patient: {
-                        "hospital_id": admission['patient'],
+                        "id": admission['patient'],
+                        "hospital_id": admission['patient_hospital_id'],
                         "name": admission['patient_name'],
                       },
                     ),

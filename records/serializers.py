@@ -84,6 +84,9 @@ class AdmissionSerializer(serializers.ModelSerializer):
     ref_source = serializers.CharField(max_length=100, allow_blank=True, required=False)
     date_of_admission = serializers.DateField()
     is_current = serializers.BooleanField(default=False)
+    id = serializers.IntegerField(read_only=True)
+    patient_name = serializers.CharField(source='patient.name', read_only=True)
+    patient_hospital_id = serializers.CharField(source='patient.hospital_id', read_only=True)
 
     def validate(self, data):
         # Note: discharge_date field doesn't exist in current model, so skipping that validation
@@ -97,6 +100,7 @@ class AdmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Admission
         fields = [
+            'id',    
             'patient',
             'patient_hospital_id',
             'patient_name',

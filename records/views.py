@@ -50,11 +50,23 @@ class PatientViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'hospital_id', 'father_name', 'surname', 'nic', 'dob', 'age', 'sex', 'marital_status', 'religion', 'education', 'occupation', 'address']
 
+# class AdmissionViewSet(viewsets.ModelViewSet):
+#     queryset = Admission.objects.all()
+#     serializer_class = AdmissionSerializer
+#     # permission_classes = [IsAuthenticated]
+#     permission_classes = [IsAdminOrReadOnly]  # Use the custom permission class
+
 class AdmissionViewSet(viewsets.ModelViewSet):
-    queryset = Admission.objects.all()
+    queryset = Admission.objects.all().order_by('-date_of_admission')
     serializer_class = AdmissionSerializer
-    # permission_classes = [IsAuthenticated]
-    permission_classes = [IsAdminOrReadOnly]  # Use the custom permission class
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        queryset = Admission.objects.all().order_by('-date_of_admission')
+        patient_id = self.request.query_params.get('patient')
+        if patient_id:
+            queryset = queryset.filter(patient_id=patient_id)
+        return queryset
 
 from django.http import HttpResponse
 
