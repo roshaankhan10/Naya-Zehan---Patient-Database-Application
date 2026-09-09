@@ -33,10 +33,30 @@ Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/
 - **`docs/decisions-log.md`** — the decisions that didn't warrant an ADR, with their
   reasoning, plus open items and known dead code.
 
+## Running the tests
+
+```
+python manage.py test --settings=backend.settings_test
+```
+
+`backend/settings_test.py` pins the connection to an in-memory SQLite database, so
+the suite is safe to run even with `DATABASE_URL` pointing at Supabase. Never run
+`manage.py test` without that flag.
+
+Shared fixtures live in `records/tests/support.py`: subclass `RoleTestCase` to get two
+Admin accounts — one via each of `is_staff` and `is_superuser`, since either grants the
+role — and a User, then call `self.login_as(account)` to authenticate the test client
+through the real token endpoint.
+
+Production runs Python 3.10 (see `render.yaml`). Django 3.2 imports the `cgi` module,
+which was removed in Python 3.13, so on a newer local interpreter install the
+`legacy-cgi` shim into the virtualenv — it is a local-only dependency and deliberately
+not in `requirements.txt`.
+
 ## Operating constraints
 
 - The database holds **real patient records** and runs on a free tier with **no
   point-in-time restore**. Treat destructive operations accordingly.
 - Tests must never run against the production database. `manage.py test` will try to
-  create a test database on the Supabase pooler if `DATABASE_URL` is set — run tests
-  against local SQLite via a test-settings override.
+  create a test database on the Supabase pooler if `DATABASE_URL` is set — run tests with
+  `--settings=backend.settings_test`, which pins them to local SQLite.
