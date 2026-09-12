@@ -83,7 +83,7 @@ def clean_date(val):
 # ── Row → Patient ──────────────────────────────────────────────────────────────
 def row_to_patient_dict(record):
     return dict(
-        hospital_id=clean(record.get('H_ID_NO')),
+        h_id_no=clean(record.get('H_ID_NO')),  # the raw dBASE value, used only to find the patient
         name=clean(record.get('NAME')),
         father_name=clean(record.get('FNAME')),
         surname=clean(record.get('SURNAME')),
@@ -102,7 +102,7 @@ def row_to_patient_dict(record):
 # ── Row → Admission ────────────────────────────────────────────────────────────
 def row_to_admission_dict(record):
     return dict(
-        hospital_id_ref=clean(record.get('H_ID_NO')),
+        h_id_no=clean(record.get('H_ID_NO')),  # the raw dBASE value, used only to find the patient
         date_of_admission=clean_date(record.get('DOA')),
         ward_no=clean(record.get('WARD_NO')),
         ref_source=clean(record.get('REF_SOURCE')),
@@ -220,12 +220,11 @@ class Command(BaseCommand):
 
             for record in records:
                 adm_dict = row_to_admission_dict(record)
-                h_id = adm_dict['hospital_id_ref']
+                h_id = adm_dict.pop('h_id_no')
                 patient_id = patient_lookup.get(h_id) if h_id else None
 
                 admission = Admission(
                     patient_id=patient_id,
-                    hospital_id_ref=adm_dict['hospital_id_ref'],
                     date_of_admission=adm_dict['date_of_admission'],
                     ward_no=adm_dict['ward_no'],
                     ref_source=adm_dict['ref_source'],

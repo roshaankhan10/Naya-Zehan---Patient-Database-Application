@@ -98,9 +98,23 @@ retrospectively — history not captured is gone. For psychiatric records, unaut
   was chosen anyway for this niche audience; the trade-off is that incidents surfacing
   late — a complaint in March about something in November — become unanswerable.
 
-Related, and still open: **Django `/admin/` is a second full-CRUD door** into all
+Related, and now **closed**: Django `/admin/` was a second full-CRUD door into all
 223K records, reachable on the public internet, bypassing `IsAdminOrReadOnly` and any
-audit logging. It should be locked down or removed before handoff.
+audit logging. **It has been removed outright** — `django.contrib.admin` is out of
+`INSTALLED_APPS` and the `admin/` path is out of `backend/urls.py`, so nothing under
+`/admin/` is routed at all.
+
+Removed rather than restricted to superusers. A superuser-only admin is still a door
+that writes patient records without touching the access log, which would make every
+guarantee the log offers false the day it shipped; and the management tasks it was
+kept for — create an account, reset a password, deactivate a departed employee — are
+the in-app admin screen below, which the institute can actually use. `createsuperuser`
+and `manage.py shell` remain for anyone with server access, which is the right level
+of friction for a console.
+
+The `django_admin_log` table is left in the database. Dropping it is not worth a
+migration against 223K live records, and it holds the record of who did what through
+the old door.
 
 ## Infrastructure
 
@@ -181,14 +195,23 @@ irreplaceable records with no restore path.
 
 ## Housekeeping found while reading the repo
 
-- `khidmat_mobile/lib/api_config.dart` — dead code, still present despite being
-  flagged for deletion repeatedly.
-- `records/urls.py` — a stale duplicate of `backend/urls.py` (missing `MeView`) that
-  nothing imports. Two files that look authoritative; one is a decoy.
-- `src/index.tsx`, `src/patients.tsx` — an abandoned React prototype defining a third,
-  contradictory `Patient` shape (`bloodType`, `phone`, `condition`, `status`).
-- `Admission.hospital_id_ref` — a fossil of the abandoned linking strategy; populated
-  by no importer, exposed by no serializer.
-- `AdmissionSerializer` — `patient_name` and `patient_hospital_id` are each declared
-  twice.
-- `TIME_ZONE = 'UTC'` while the institute is UTC+5.
+All but the last are **done** (issue #5):
+
+- ~~`khidmat_mobile/lib/api_config.dart`~~ — deleted. `lib/config/app_config.dart` is
+  the real one.
+- ~~`records/urls.py`~~ — deleted. It was a stale duplicate of `backend/urls.py`
+  (missing `MeView`) that nothing imported; two files looked authoritative.
+- ~~`src/index.tsx`, `src/patients.tsx`~~ — deleted. An abandoned React prototype
+  defining a third, contradictory `Patient` shape (`bloodType`, `phone`, `condition`,
+  `status`).
+- ~~`records/app.py`~~ — deleted. A commented-out Flask app sitting next to the real
+  `records/apps.py`, found alongside the four above.
+- ~~`Admission.hospital_id_ref`~~ — dropped, with migration `0002`. It held the raw
+  `H_ID_NO` string from the dBASE dump. `import_all.py` did populate it, but only ever
+  read it back in the same loop to look up the patient FK, so it is now a local
+  variable there; no serializer exposed it and no query used it.
+- ~~`AdmissionSerializer`~~ — the duplicate `patient_name` and `patient_hospital_id`
+  declarations are gone. `records/tests/test_api_shape.py` pins the response fields so
+  the removal is provably invisible to the Flutter client.
+- `TIME_ZONE = 'UTC'` while the institute is UTC+5. **Still open** — changing it moves
+  every rendered date and wants its own ticket.

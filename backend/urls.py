@@ -1,4 +1,3 @@
-from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import path, include
 from rest_framework import routers
@@ -20,7 +19,6 @@ router.register(r'admissions', AdmissionViewSet)
 
 urlpatterns = [
     path('', home),
-    path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/me/', MeView.as_view(), name='me'),
     path('api/staff/create/', StaffCreateView.as_view(), name='staff-create'),
