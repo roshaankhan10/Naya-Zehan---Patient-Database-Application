@@ -138,8 +138,8 @@ mitigation. The non-negotiable piece in any version is the off-Supabase backup: 
 source data is legacy dBASE dumps, and losing the database means redoing the entire
 migration.
 
-**Runtime: Django 5.2 LTS on Python 3.13.** Agreed on 2026-09-12; not implemented yet.
-The spec is #21. Django 3.2 lost security support in April 2024, and Python 3.10
+**Runtime: Django 5.2 LTS on Python 3.13.** Agreed on 2026-09-12. Implemented
+on the `django-5.2-upgrade` branch on 2026-10-03, not yet released. The spec is #21. Django 3.2 lost security support in April 2024, and Python 3.10
 reaches end of life in October 2026. 5.2 is the current LTS, supported until April
 2028, which is the longest runway on offer for an institute that cannot do its own
 upgrades. The database driver stays `psycopg2-binary` through that change, so a failed

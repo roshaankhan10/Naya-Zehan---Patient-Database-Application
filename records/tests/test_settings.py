@@ -14,14 +14,14 @@ import backend.settings
 
 
 class NoRemovedSettingsTest(SimpleTestCase):
-    REMOVED = [
+    REMOVED_SETTINGS = [
         'USE_L10N',                   # Django 5.0: localisation is always on
         'STATICFILES_STORAGE',        # Django 5.1: replaced by STORAGES
         'SECURE_BROWSER_XSS_FILTER',  # Django 4.0: X-XSS-Protection is gone
     ]
 
     def test_no_setting_django_no_longer_reads_is_set(self):
-        for name in self.REMOVED:
+        for name in self.REMOVED_SETTINGS:
             with self.subTest(setting=name):
                 self.assertFalse(hasattr(backend.settings, name))
 
