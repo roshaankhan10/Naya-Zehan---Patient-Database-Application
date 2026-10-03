@@ -16,4 +16,4 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         sync: false        # you will paste your render domain manually
       - key: PYTHON_VERSION
-        value: "3.10.12"
+        value: "3.13.16"
