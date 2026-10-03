@@ -9,7 +9,6 @@ The routing assertions are the load-bearing ones: an unrouted path cannot serve 
 login form to anybody, session or not. The HTTP-level check makes the same claim end
 to end.
 """
-from django.test.client import ClientHandler, RequestFactory
 from django.urls import NoReverseMatch, Resolver404, resolve, reverse
 
 from records.tests.support import RoleTestCase
@@ -20,18 +19,6 @@ ADMIN_PATHS = [
     '/admin/records/patient/',
     '/admin/records/patient/1/change/',
 ]
-
-def get(path):
-    """Make a real request for `path` and return the response.
-
-    Deliberately not `self.client`: the test client copies every rendered template's
-    context, and doing that to Django 3.2's default 404 page raises on Python 3.13+.
-    The same middleware and URL configuration run either way, and nothing here needs
-    the client's cookie jar — the point is that `path` reaches no view at all.
-    """
-    handler = ClientHandler()
-    handler.load_middleware()
-    return handler.get_response(RequestFactory().get(path))
 
 
 class AdminDoorClosedTest(RoleTestCase):
@@ -50,7 +37,7 @@ class AdminDoorClosedTest(RoleTestCase):
     def test_a_request_for_an_admin_path_is_a_404(self):
         for path in ADMIN_PATHS:
             with self.subTest(path=path):
-                response = get(path)
+                response = self.client.get(path)
                 self.assertEqual(response.status_code, 404)
                 self.assertNotIn(b'<form', response.content.lower())
 
