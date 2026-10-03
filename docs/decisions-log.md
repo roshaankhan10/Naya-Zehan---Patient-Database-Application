@@ -167,7 +167,8 @@ merge to `main`, even a docs-only one, is a production deploy.**
   `main`'s schema, then migrated forward, so each release's migrations are rehearsed on
   the same data in the same order production will run them. Rejected: a personal
   Render/Supabase staging copy, which would put real psychiatric records in a personal
-  cloud account. "Confident" means the checklist in #29 passed, not a feeling.
+  cloud account. "Confident" means the checklist in #29 passed, not a feeling. The
+  steps to build it are in `docs/local-rehearsal.md`.
 - **Two releases, not one** (#30). Release A is the commit tagged `release-a` (the test
   harness and cleanup, PR #26); Release B is the upgrade. Shipped together, a failure
   would have two suspects and no logs to tell them apart.
@@ -232,6 +233,21 @@ irreplaceable records with no restore path.
   `hospital_id` matches no patient, without counting them, and resolves matches with
   `.filter(...).first()` — so with duplicate hospital IDs an admission attaches to an
   arbitrary row. Nobody knows how many admissions were lost on import.
+- **The data in the repo is ~123,000 patients, not ~223,000.** The first local
+  rehearsal (#28, 2026-10-03) found that `PATREC.DBF` has 123,470 records and
+  `import_all` imports 123,181 of them. The ~223,000 quoted on this page and elsewhere
+  doesn't come from any file in the repo. Either production was loaded from a source
+  that isn't here, or rows were imported twice, or the figure is wrong. Only a
+  `count(*)` on production can settle it, so ask the owner in the single #30 message.
+  Until then, a rehearsal is not proof that a migration behaves the same on
+  production's data.
+- **Migration `0002` discards the only patient reference on 1,977 admissions.** In the
+  rehearsal, 1,994 imported admissions matched no patient, and 1,977 of those had an
+  `H_ID_NO` in `hospital_id_ref`. Dropping the column (Release A) leaves those rows with
+  no link to any patient. The values can still be rebuilt from `INDOOR1.DBF`, but only
+  for rows that came from the import. The decision to drop the column assumed nothing
+  read it, which is true of the code but not of the data. Decide before #30 whether to
+  accept this, or to export those rows first.
 
 ## Housekeeping found while reading the repo
 
