@@ -262,7 +262,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
               ? const Icon(Icons.check_circle, color: Colors.green)
               : null,
         );
-      }).toList(),
+      }),
       ElevatedButton.icon(
         onPressed: () async {
           final added = await Navigator.pushNamed(

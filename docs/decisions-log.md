@@ -98,9 +98,23 @@ retrospectively — history not captured is gone. For psychiatric records, unaut
   was chosen anyway for this niche audience; the trade-off is that incidents surfacing
   late — a complaint in March about something in November — become unanswerable.
 
-Related, and still open: **Django `/admin/` is a second full-CRUD door** into all
+Related, and now **closed**: Django `/admin/` was a second full-CRUD door into all
 223K records, reachable on the public internet, bypassing `IsAdminOrReadOnly` and any
-audit logging. It should be locked down or removed before handoff.
+audit logging. **It has been removed outright** — `django.contrib.admin` is out of
+`INSTALLED_APPS` and the `admin/` path is out of `backend/urls.py`, so nothing under
+`/admin/` is routed at all.
+
+Removed rather than restricted to superusers. A superuser-only admin is still a door
+that writes patient records without touching the access log, which would make every
+guarantee the log offers false the day it shipped; and the management tasks it was
+kept for — create an account, reset a password, deactivate a departed employee — are
+the in-app admin screen below, which the institute can actually use. `createsuperuser`
+and `manage.py shell` remain for anyone with server access, which is the right level
+of friction for a console.
+
+The `django_admin_log` table is left in the database. Dropping it is not worth a
+migration against 223K live records, and it holds the record of who did what through
+the old door.
 
 ## Infrastructure
 
@@ -123,6 +137,47 @@ Upgrading (~$30/month total) was recommended and declined; the above is the agre
 mitigation. The non-negotiable piece in any version is the off-Supabase backup: the
 source data is legacy dBASE dumps, and losing the database means redoing the entire
 migration.
+
+**Runtime: Django 5.2 LTS on Python 3.13.** Agreed on 2026-09-12; not implemented yet.
+The spec is #21. Django 3.2 lost security support in April 2024, and Python 3.10
+reaches end of life in October 2026. 5.2 is the current LTS, supported until April
+2028, which is the longest runway on offer for an institute that cannot do its own
+upgrades. The database driver stays `psycopg2-binary` through that change, so a failed
+deploy has one suspect rather than two. Narrowed on 2026-10-03 to the minimal upgrade;
+making `requirements.txt` the single place the runtime is declared is its own ticket,
+#31.
+
+## Branches and releases
+
+Settled on 2026-10-03. The constraint behind every point: the developer is a GitHub
+collaborator but has **no access to Render**, so there are no deploy logs, no rollback
+button, and no way to pause auto-deploy. Render deploys `main` on every push, so **any
+merge to `main`, even a docs-only one, is a production deploy.**
+
+- **`main` is production.** Nothing is merged to it until the owner has made a backup
+  and confirmed which Python Render actually runs (`render.yaml` is only honoured if the
+  service was created as a Blueprint). Rejected: asking the owner to point Render at
+  another branch, which would make `main` stop meaning "what's live" for whoever
+  inherits the project.
+- **`tickets-test-harness` is staging.** Finished work collects there and is tested
+  before it goes anywhere near production.
+- **Feature work branches from staging** and merges back into it with a merge commit
+  once tested. The Django upgrade is `django-5.2-upgrade` (#21).
+- **Testing is local only** (#28): a laptop PostgreSQL loaded from the `.DBF` files at
+  `main`'s schema, then migrated forward, so each release's migrations are rehearsed on
+  the same data in the same order production will run them. Rejected: a personal
+  Render/Supabase staging copy, which would put real psychiatric records in a personal
+  cloud account. "Confident" means the checklist in #29 passed, not a feeling. The
+  steps to build it are in `docs/local-rehearsal.md`.
+- **Two releases, not one** (#30). Release A is the commit tagged `release-a` (the test
+  harness and cleanup, PR #26); Release B is the upgrade. Shipped together, a failure
+  would have two suspects and no logs to tell them apart.
+- **Rollback differs per release.** Release A drops `Admission.hospital_id_ref` in
+  migration `0002`, so reverting it would redeploy code expecting a column that no
+  longer exists: **fix forward**. Release B's only migration is simplejwt metadata that
+  old code tolerates: **revert** is safe.
+- **The owner is contacted once**, after testing passes, with every request in one
+  message (#30).
 
 ## Account management
 
@@ -178,17 +233,42 @@ irreplaceable records with no restore path.
   `hospital_id` matches no patient, without counting them, and resolves matches with
   `.filter(...).first()` — so with duplicate hospital IDs an admission attaches to an
   arbitrary row. Nobody knows how many admissions were lost on import.
+- **The data in the repo is ~123,000 Patient records, not ~223,000.** The first local
+  rehearsal (#28, 2026-10-03) found that `PATREC.DBF` holds 123,470 records, of which
+  `PATREC2.csv` (what `import_all` actually reads) has 123,394, and 123,181 get
+  imported. The ~223,000 quoted on this page and elsewhere
+  doesn't come from any file in the repo. Either production was loaded from a source
+  that isn't here, or rows were imported twice, or the figure is wrong. Only a
+  `count(*)` on production can settle it, so ask the owner in the single #30 message.
+  Until then, a rehearsal is not proof that a migration behaves the same on
+  production's data.
+- **Migration `0002` discards the only patient reference on 1,977 admissions.** In the
+  rehearsal, 1,994 imported admissions matched no patient, and 1,977 of those had an
+  `H_ID_NO` in `hospital_id_ref`. Dropping the column (Release A) leaves those rows with
+  no link to any patient. The values can still be rebuilt from `INDOOR1.DBF`, but only
+  for rows that came from the import. The decision to drop the column assumed nothing
+  read it, which is true of the code but not of the data. Decide before #30 whether to
+  accept this, or to export those rows first.
 
 ## Housekeeping found while reading the repo
 
-- `khidmat_mobile/lib/api_config.dart` — dead code, still present despite being
-  flagged for deletion repeatedly.
-- `records/urls.py` — a stale duplicate of `backend/urls.py` (missing `MeView`) that
-  nothing imports. Two files that look authoritative; one is a decoy.
-- `src/index.tsx`, `src/patients.tsx` — an abandoned React prototype defining a third,
-  contradictory `Patient` shape (`bloodType`, `phone`, `condition`, `status`).
-- `Admission.hospital_id_ref` — a fossil of the abandoned linking strategy; populated
-  by no importer, exposed by no serializer.
-- `AdmissionSerializer` — `patient_name` and `patient_hospital_id` are each declared
-  twice.
-- `TIME_ZONE = 'UTC'` while the institute is UTC+5.
+All but the last are **done** (issue #5):
+
+- ~~`khidmat_mobile/lib/api_config.dart`~~ — deleted. `lib/config/app_config.dart` is
+  the real one.
+- ~~`records/urls.py`~~ — deleted. It was a stale duplicate of `backend/urls.py`
+  (missing `MeView`) that nothing imported; two files looked authoritative.
+- ~~`src/index.tsx`, `src/patients.tsx`~~ — deleted. An abandoned React prototype
+  defining a third, contradictory `Patient` shape (`bloodType`, `phone`, `condition`,
+  `status`).
+- ~~`records/app.py`~~ — deleted. A commented-out Flask app sitting next to the real
+  `records/apps.py`, found alongside the four above.
+- ~~`Admission.hospital_id_ref`~~ — dropped, with migration `0002`. It held the raw
+  `H_ID_NO` string from the dBASE dump. `import_all.py` did populate it, but only ever
+  read it back in the same loop to look up the patient FK, so it is now a local
+  variable there; no serializer exposed it and no query used it.
+- ~~`AdmissionSerializer`~~ — the duplicate `patient_name` and `patient_hospital_id`
+  declarations are gone. `records/tests/test_api_shape.py` pins the response fields so
+  the removal is provably invisible to the Flutter client.
+- `TIME_ZONE = 'UTC'` while the institute is UTC+5. **Still open** — changing it moves
+  every rendered date and wants its own ticket.

@@ -62,11 +62,11 @@ class Patient(models.Model):
 
 class Admission(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, null=True, blank=True)
-    hospital_id_ref = models.CharField(max_length=20, blank=True, null=True)  # raw H_ID_NO for linking
     date_of_admission = models.DateField(blank=True, null=True)
     ward_no = models.CharField(max_length=10, blank=True, null=True)
     ref_source = models.CharField(max_length=100, blank=True, null=True)
     is_current = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.hospital_id_ref} @ {self.date_of_admission}"
+        patient = (self.patient.hospital_id or 'N/A') if self.patient else 'unlinked'
+        return f"{patient} @ {self.date_of_admission}"
