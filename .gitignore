@@ -37,3 +37,6 @@ local.properties
 .vscode/
 __pycache__/
 *.pyc
+
+# Generated issue snapshot (scripts/snapshot_issues.py). GitHub is the source of truth.
+.scratch/issues/

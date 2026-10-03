@@ -33,6 +33,16 @@ Create a GitHub issue.
 
 Run `gh issue view <number> --comments`.
 
+## Reading issues offline
+
+`python scripts/snapshot_issues.py` writes every issue, open and closed, with labels,
+body and comments, to `.scratch/issues/`, plus a `README.md` index showing what blocks
+what. The output is gitignored and stamped with when it was generated.
+
+Never hand-edit it, and never commit a copy. It replaced a hand-written mirror that
+drifted within a week: it missed a new ticket and kept advertising three shipped ones
+as ready to start. When in doubt, `gh issue view` is the answer.
+
 ## Wayfinding operations
 
 Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
