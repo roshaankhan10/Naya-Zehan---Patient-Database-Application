@@ -143,8 +143,40 @@ The spec is #21. Django 3.2 lost security support in April 2024, and Python 3.10
 reaches end of life in October 2026. 5.2 is the current LTS, supported until April
 2028, which is the longest runway on offer for an institute that cannot do its own
 upgrades. The database driver stays `psycopg2-binary` through that change, so a failed
-deploy has one suspect rather than two. `requirements.txt` becomes the single place the
-runtime is declared.
+deploy has one suspect rather than two. Narrowed on 2026-10-03 to the minimal upgrade;
+making `requirements.txt` the single place the runtime is declared is its own ticket,
+#31.
+
+## Branches and releases
+
+Settled on 2026-10-03. The constraint behind every point: the developer is a GitHub
+collaborator but has **no access to Render**, so there are no deploy logs, no rollback
+button, and no way to pause auto-deploy. Render deploys `main` on every push, so **any
+merge to `main`, even a docs-only one, is a production deploy.**
+
+- **`main` is production.** Nothing is merged to it until the owner has made a backup
+  and confirmed which Python Render actually runs (`render.yaml` is only honoured if the
+  service was created as a Blueprint). Rejected: asking the owner to point Render at
+  another branch, which would make `main` stop meaning "what's live" for whoever
+  inherits the project.
+- **`tickets-test-harness` is staging.** Finished work collects there and is tested
+  before it goes anywhere near production.
+- **Feature work branches from staging** and merges back into it with a merge commit
+  once tested. The Django upgrade is `django-5.2-upgrade` (#21).
+- **Testing is local only** (#28): a laptop PostgreSQL loaded from the `.DBF` files at
+  `main`'s schema, then migrated forward, so each release's migrations are rehearsed on
+  the same data in the same order production will run them. Rejected: a personal
+  Render/Supabase staging copy, which would put real psychiatric records in a personal
+  cloud account. "Confident" means the checklist in #29 passed, not a feeling.
+- **Two releases, not one** (#30). Release A is the commit tagged `release-a` (the test
+  harness and cleanup, PR #26); Release B is the upgrade. Shipped together, a failure
+  would have two suspects and no logs to tell them apart.
+- **Rollback differs per release.** Release A drops `Admission.hospital_id_ref` in
+  migration `0002`, so reverting it would redeploy code expecting a column that no
+  longer exists: **fix forward**. Release B's only migration is simplejwt metadata that
+  old code tolerates: **revert** is safe.
+- **The owner is contacted once**, after testing passes, with every request in one
+  message (#30).
 
 ## Account management
 

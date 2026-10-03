@@ -57,6 +57,10 @@ not in `requirements.txt`.
 
 - The database holds **real patient records** and runs on a free tier with **no
   point-in-time restore**. Treat destructive operations accordingly.
+- **Never merge or push to `main`.** Render auto-deploys it, so every merge is a
+  production deploy. Branch from and merge into the staging branch,
+  `tickets-test-harness`; releases go to `main` only through #30. See "Branches and
+  releases" in `docs/decisions-log.md`.
 - Tests must never run against the production database. `manage.py test` will try to
   create a test database on the Supabase pooler if `DATABASE_URL` is set — run tests with
   `--settings=backend.settings_test`, which pins them to local SQLite.
