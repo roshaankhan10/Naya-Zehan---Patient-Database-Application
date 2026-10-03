@@ -222,9 +222,14 @@ Step 4 was run from `ff76406`, the commit the `release-a` tag points to.
 - **API, checked with curl:** as an Admin, all of these answered correctly, including the
   CORS preflight from the app's origin: login, `/me/`, the Patient and Admission lists,
   search, and `/admissions/?patient=<id>`.
-- **App:** the Flutter web build compiled and was served against the local backend. The
-  click-through in step 6 (login, search, opening admissions) **has not been done yet**;
-  a person has to do it.
+- **App:** the Flutter web build was served against the local backend, and the
+  developer clicked through step 6: login, search, and opening a patient's admissions all
+  worked. The backend log confirms each request.
+- **Bug found in the app, already present on `main`:** an admission with no linked
+  patient still shows "View Full Patient Details". Tapping it requests
+  `/admissions/?patient=null`, the backend returns a 500 (`int('null')` in
+  `AdmissionViewSet.get_queryset`), and the app swallows the error and shows an empty
+  list. 1,994 admissions are unlinked.
 
 **The ticket's "all ~223,000 Patient records" could not be met**: the repo only holds
 the 123,181 imported here. That finding and one about migration `0002` are under "Open
