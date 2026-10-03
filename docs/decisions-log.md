@@ -233,9 +233,10 @@ irreplaceable records with no restore path.
   `hospital_id` matches no patient, without counting them, and resolves matches with
   `.filter(...).first()` — so with duplicate hospital IDs an admission attaches to an
   arbitrary row. Nobody knows how many admissions were lost on import.
-- **The data in the repo is ~123,000 patients, not ~223,000.** The first local
-  rehearsal (#28, 2026-10-03) found that `PATREC.DBF` has 123,470 records and
-  `import_all` imports 123,181 of them. The ~223,000 quoted on this page and elsewhere
+- **The data in the repo is ~123,000 Patient records, not ~223,000.** The first local
+  rehearsal (#28, 2026-10-03) found that `PATREC.DBF` holds 123,470 records, of which
+  `PATREC2.csv` (what `import_all` actually reads) has 123,394, and 123,181 get
+  imported. The ~223,000 quoted on this page and elsewhere
   doesn't come from any file in the repo. Either production was loaded from a source
   that isn't here, or rows were imported twice, or the figure is wrong. Only a
   `count(*)` on production can settle it, so ask the owner in the single #30 message.

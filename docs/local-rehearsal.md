@@ -101,7 +101,7 @@ $env:DEBUG        = "True"
 $env:PYTHONIOENCODING = "utf-8"   # import_all prints ✓ and ══
 ```
 
-Migrate and import with Python 3.10, which is what production ran:
+Migrate and import with Python 3.10, which is what production may have run:
 
 ```powershell
 Set-Location "$REH\main-checkout"
@@ -109,8 +109,10 @@ Set-Location "$REH\main-checkout"
 & "$REH\py310\python.exe" manage.py import_all > "$REH\logs\import.log" 2>&1
 ```
 
-`import_all` reads patients from `PATREC2.csv` (a CSV export of `PATREC.DBF`) and
-admissions from `INDOOR1.DBF`. The import takes a few minutes.
+`import_all` reads patients from `PATREC2.csv`, not from `PATREC.DBF`, and admissions
+from `INDOOR1.DBF`. That is `main`'s code, so it is what production was loaded with.
+The CSV is a partial export: it has 76 fewer rows than the DBF (see the results below).
+The import takes a few minutes.
 
 Record the counts:
 
@@ -134,10 +136,14 @@ To reset later, drop and recreate `nz_rehearsal`, then run
 ## 4. Migrate forward to the staging branch's schema
 
 This is the rehearsal of **Release A**: the same migrations, on the same data, in the
-same order as production. Run it from the repo, on the staging branch:
+same order as production. Run it from the `release-a` tag, not from the staging branch's
+tip, because staging keeps moving after the release is cut. For Release B, do the same
+with its tag.
 
 ```powershell
-Set-Location $REPO
+git -C $REPO worktree add --detach "$REH\release-a" release-a
+Set-Location "$REH\release-a"
+$env:DATABASE_URL   # must say 127.0.0.1:5433 — stop here if it doesn't
 & "$REH\py310\python.exe" manage.py migrate --plan   # read it before applying
 & "$REH\py310\python.exe" manage.py migrate
 ```
@@ -168,7 +174,15 @@ curl -s -H "Authorization: Bearer $TOK" $B/patients/   | python -c "import sys,j
 curl -s -H "Authorization: Bearer $TOK" $B/admissions/ | python -c "import sys,json; print(json.load(sys.stdin)['count'])"
 ```
 
-The two counts must match the database.
+The two counts must match the database. Then the two calls the app makes when you
+search and when you open a patient:
+
+```bash
+curl -s -H "Authorization: Bearer $TOK" "$B/patients/?search=<a name or Hospital ID>" \
+  | python -c "import sys,json; print(json.load(sys.stdin)['count'])"
+curl -s -H "Authorization: Bearer $TOK" "$B/admissions/?patient=<a patient id>" \
+  | python -c "import sys,json; print(json.load(sys.stdin)['count'])"
+```
 
 ## 6. Run the Flutter app against the local backend
 
@@ -194,14 +208,24 @@ laptop at `http://10.0.2.2:8000/api`.
 | Imported at `main`'s schema | 123,181 | 13,338 | 11,344 |
 | After migrating to staging (`0002`) | 123,181 | 13,338 | 11,344 |
 
-`import_all` skipped 213 patient rows that had no name. The full test suite passed on
-both Python 3.13.16 and 3.10.22. As an Admin, login, `/me/`, the Patient and Admission
-lists, search, and `/admissions/?patient=<id>` all answered correctly from the app's
-origin.
+Where the numbers come from:
 
-Two findings from this run are recorded under "Open items" in
-`docs/decisions-log.md`:
+- `PATREC.DBF` holds 123,470 Patient records, none marked deleted. `PATREC2.csv` has
+  123,394 rows, so 76 records never reached the CSV. `import_all` then skipped 213 CSV
+  rows that were empty or had no name.
+- `INDOOR1.DBF`'s header claims 13,342 records, but only 13,338 can be read, and all of
+  them were imported.
 
-- **The repo holds about 123,000 patients, not 223,000.** `PATREC.DBF` has 123,470
-  records. The 223,000 quoted throughout the docs does not come from these files.
-- **Migration `0002` discards the only patient reference on 1,977 admissions.**
+Step 4 was run from `ff76406`, the commit the `release-a` tag points to.
+
+- **Tests:** the full suite passed on Python 3.13.16 and on 3.10.22.
+- **API, checked with curl:** as an Admin, all of these answered correctly, including the
+  CORS preflight from the app's origin: login, `/me/`, the Patient and Admission lists,
+  search, and `/admissions/?patient=<id>`.
+- **App:** the Flutter web build compiled and was served against the local backend. The
+  click-through in step 6 (login, search, opening admissions) **has not been done yet**;
+  a person has to do it.
+
+**The ticket's "all ~223,000 Patient records" could not be met**: the repo only holds
+the 123,181 imported here. That finding and one about migration `0002` are under "Open
+items" in `docs/decisions-log.md`.
